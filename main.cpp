@@ -10,41 +10,20 @@
 
 #define VERSION "0.1"
 
-size_t kill_suspicious(std::vector<DWORD> &suspicious_pids)
-{
-    size_t killed = 0;
-    std::vector<DWORD>::iterator itr;
-    for (itr = suspicious_pids.begin(); itr != suspicious_pids.end(); itr++) {
-        DWORD pid = *itr;
-        HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-        if (!hProcess) {
-            continue;
-        }
-        if (TerminateProcess(hProcess, 0)) {
-            killed++;
-        } else {
-            std::cerr << "Could not terminate process. PID = " << pid << std::endl;
-        }
-        CloseHandle(hProcess);
-    }
-    return killed;
-}
-
 size_t deploy_scan(t_hh_params &hh_args)
 {
     std::vector<DWORD> suspicious_pids;
+    std::vector<DWORD> unkilled_pids;
 
     DWORD start_tick = GetTickCount();
-
-    if (find_suspicious_process(suspicious_pids, hh_args) == 0) {
+    if (find_suspicious_process(suspicious_pids, unkilled_pids, hh_args) == 0) {
         return 0;
     }
     DWORD total_time = GetTickCount() - start_tick;
     std::cout << "--------" << std::endl;
     std::cout << "Finished scan in: " << std::dec << total_time << " milliseconds" << std::endl;
-
-    if (hh_args.kill_suspicious) {
-        kill_suspicious(suspicious_pids);
+    if ((suspicious_pids.size() > 0) && unkilled_pids.size()) {
+        std::cout << "WARNING: " << unkilled_pids.size() << " of the suspicious processes are not killed" << std::endl;
     }
     return suspicious_pids.size();
 }

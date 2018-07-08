@@ -64,7 +64,21 @@ bool is_searched_process(DWORD processID, const char* searchedName)
     return false;
 }
 
-size_t find_suspicious_process(std::vector<DWORD> &replaced, t_hh_params &hh_args)
+bool kill_suspicious(DWORD pid)
+{
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    if (!hProcess) {
+        return false;
+    }
+    bool is_killed = false;
+    if (TerminateProcess(hProcess, 0)) {
+        is_killed = true;
+    }
+    CloseHandle(hProcess);
+    return is_killed;
+}
+
+size_t find_suspicious_process(std::vector<DWORD> &replaced, std::vector<DWORD> &unkilled_pids, t_hh_params &hh_args)
 {
     DWORD aProcesses[1024], cbNeeded, cProcesses;
     unsigned int i;
@@ -93,6 +107,13 @@ size_t find_suspicious_process(std::vector<DWORD> &replaced, t_hh_params &hh_arg
         hh_args.pesieve_args.pid = pid;
         if (is_replaced_process(hh_args.pesieve_args)) {
             replaced.push_back(pid);
+            bool is_killed = false;
+            if (hh_args.kill_suspicious) {
+                is_killed = kill_suspicious(pid);
+            }
+            if (!is_killed) {
+                unkilled_pids.push_back(pid);
+            }
         }
     }
     return replaced.size();

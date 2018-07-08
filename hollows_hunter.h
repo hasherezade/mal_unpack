@@ -19,4 +19,5 @@ typedef struct {
 
 void hh_args_init(t_hh_params &args);
 
-size_t find_suspicious_process(std::vector<DWORD> &replaced, t_hh_params &hh_args);
+size_t find_suspicious_process(std::vector<DWORD> &replaced, std::vector<DWORD> &unkilled_pids, t_hh_params &hh_args);
+
