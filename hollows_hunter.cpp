@@ -25,8 +25,12 @@ bool is_replaced_process(t_params args)
         std::cout << "Found replaced: " << std::dec << args.pid << std::endl;
         return true;
     }
-    if (report.suspicious) {
-        std::cout << "Found suspicious: " << std::dec << args.pid << std::endl;
+    if (report.implanted) {
+        std::cout << "Found implanted: " << std::dec << args.pid << std::endl;
+        return true;
+    }
+    if (report.detached) {
+        std::cout << "Found detached: " << std::dec << args.pid << std::endl;
         return true;
     }
     return false;
