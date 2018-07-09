@@ -47,7 +47,7 @@ char* get_file_name(char *full_path)
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
-        std::cout << "args: <input exe>" << std::endl;
+        std::cout << "args: <input exe> [timeout: ms]" << std::endl;
         system("pause");
         return 0;
     }
@@ -58,6 +58,11 @@ int main(int argc, char *argv[])
 
     char* file_name = get_file_name(file_path);
     std::cout << "Exe name: " << file_name << std::endl;
+
+    DWORD timeout = (-1); //INFINITE
+    if (argc >= 3) {
+        timeout = atol(argv[2]);
+    }
 
     HANDLE proc = make_new_process(file_path, flags);
     if (!proc) {
@@ -73,15 +78,25 @@ int main(int argc, char *argv[])
 
     DWORD start_tick = GetTickCount();
     size_t count = 0;
+
+    bool is_unpacked = false;
     do {
+        DWORD curr_time = GetTickCount() - start_tick;
+        if ((timeout != -1 && timeout > 0) && curr_time > timeout) {
+            std::cout << "Timeout passed!" << std::endl;
+            return 1;
+        }
         count++;
         size_t res = deploy_scan(hh_args);
         if (res > 0) {
+            is_unpacked = true;
             break;
         }
     } while (hh_args.loop_scanning);
 
-    DWORD total_time = GetTickCount() - start_tick;
-    std::cout << "Unpacked in: " << std::dec << total_time << " milliseconds; " << count << " attempts."  << std::endl;
+    if (is_unpacked) {
+        DWORD total_time = GetTickCount() - start_tick;
+        std::cout << "Unpacked in: " << std::dec << total_time << " milliseconds; " << count << " attempts." << std::endl;
+    }
     return 0;
 }
