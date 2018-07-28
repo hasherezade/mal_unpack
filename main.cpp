@@ -44,6 +44,24 @@ char* get_file_name(char *full_path)
     return full_path;
 }
 
+bool kill_till_dead(HANDLE &proc)
+{
+    bool is_killed = false;
+    //terminate the original process (if not terminated yet)
+    DWORD exit_code = 0;
+    do {
+        GetExitCodeProcess(proc, &exit_code);
+        if (exit_code == STILL_ACTIVE) {
+            TerminateProcess(proc, 0);
+        }
+        else {
+            is_killed = true;
+            break;
+        }
+    } while (true);
+    return is_killed;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
@@ -79,17 +97,20 @@ int main(int argc, char *argv[])
     DWORD start_tick = GetTickCount();
     size_t count = 0;
 
+    DWORD ret_code = ERROR_INVALID_PARAMETER;
     bool is_unpacked = false;
     do {
         DWORD curr_time = GetTickCount() - start_tick;
         if ((timeout != -1 && timeout > 0) && curr_time > timeout) {
             std::cout << "Timeout passed!" << std::endl;
-            return 1;
+            ret_code = WAIT_TIMEOUT;
+            break;
         }
         count++;
         size_t res = deploy_scan(hh_args);
         if (res > 0) {
             is_unpacked = true;
+            ret_code = ERROR_SUCCESS;
             break;
         }
     } while (hh_args.loop_scanning);
@@ -98,5 +119,9 @@ int main(int argc, char *argv[])
         DWORD total_time = GetTickCount() - start_tick;
         std::cout << "Unpacked in: " << std::dec << total_time << " milliseconds; " << count << " attempts." << std::endl;
     }
-    return 0;
+    if (kill_till_dead(proc)) {
+        std::cout << "[OK] The initial process got killed." << std::endl;
+    }
+    CloseHandle(proc);
+    return ret_code;
 }
