@@ -5,27 +5,17 @@
 #include <iostream>
 #include <sstream>
 
-#include "hollows_hunter.h"
+#include "mal_unpack.h"
 #include "process_util.h"
 
 #define VERSION "0.1"
 
-size_t deploy_scan(t_hh_params &hh_args)
+size_t deploy_scan(UnpackScanner::t_unp_params &hh_args)
 {
-    std::vector<DWORD> suspicious_pids;
-    std::vector<DWORD> unkilled_pids;
-
-    DWORD start_tick = GetTickCount();
-    if (find_suspicious_process(suspicious_pids, unkilled_pids, hh_args) == 0) {
-        return 0;
-    }
-    DWORD total_time = GetTickCount() - start_tick;
-    std::cout << "--------" << std::endl;
-    std::cout << "Finished scan in: " << std::dec << total_time << " milliseconds" << std::endl;
-    if ((suspicious_pids.size() > 0) && unkilled_pids.size()) {
-        std::cout << "WARNING: " << unkilled_pids.size() << " of the suspicious processes are not killed" << std::endl;
-    }
-    return suspicious_pids.size();
+    UnpackScanner scanner(hh_args);
+    size_t found = scanner.scan();
+    scanner.printStats();
+    return found;
 }
 
 char* get_file_name(char *full_path)
@@ -87,9 +77,11 @@ int main(int argc, char *argv[])
         std::cerr << "Could not start the process!" << std::endl;
         return -1;
     }
+    DWORD pid = GetProcessId(proc);
  
-    t_hh_params hh_args;
-    hh_args_init(hh_args);
+    UnpackScanner::t_unp_params hh_args;
+    UnpackScanner::args_init(hh_args);
+
     hh_args.kill_suspicious = true;
     hh_args.loop_scanning = true;
     hh_args.pname = file_name;

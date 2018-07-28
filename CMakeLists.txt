@@ -14,12 +14,12 @@ include_directories ( ${PESIEVE_DIR}/include )
 set (srcs
 	main.cpp
 	process_util.cpp
-	hollows_hunter.cpp
+	mal_unpack.cpp
 )
 
 set (hdrs
 	process_util.h
-	hollows_hunter.h
+	mal_unpack.h
 )
 
 # libs

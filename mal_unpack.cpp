@@ -1,18 +1,18 @@
-#include "hollows_hunter.h"
+#include "mal_unpack.h"
 
 #include <iostream>
 #include <string.h>
 
-void hh_args_init(t_hh_params &hh_args)
+void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 {
-    hh_args.pesieve_args = { 0 };
+    unp_args.pesieve_args = { 0 };
 
-    hh_args.pesieve_args.quiet = true;
-    hh_args.pesieve_args.modules_filter = 3;
-    hh_args.pesieve_args.no_hooks = true;
+    unp_args.pesieve_args.quiet = true;
+    unp_args.pesieve_args.modules_filter = 3;
+    unp_args.pesieve_args.no_hooks = true;
 
-    hh_args.loop_scanning = false;
-    hh_args.pname = "";
+    unp_args.loop_scanning = false;
+    unp_args.pname = "";
 }
 
 //---
@@ -82,7 +82,7 @@ bool kill_suspicious(DWORD pid)
     return is_killed;
 }
 
-size_t find_suspicious_process(std::vector<DWORD> &replaced, std::vector<DWORD> &unkilled_pids, t_hh_params &hh_args)
+size_t UnpackScanner::_scan()
 {
     DWORD aProcesses[1024], cbNeeded, cProcesses;
     unsigned int i;
@@ -99,8 +99,8 @@ size_t find_suspicious_process(std::vector<DWORD> &replaced, std::vector<DWORD> 
     for (i = 0; i < cProcesses; i++) {
         if (aProcesses[i] == 0) continue;
         DWORD pid = aProcesses[i];
-        if (hh_args.pname != "") {
-            if (!is_searched_process(pid, hh_args.pname.c_str())) {
+        if (unp_args.pname != "") {
+            if (!is_searched_process(pid, unp_args.pname.c_str())) {
                 //it is not the searched process, so skip it
                 continue;
             }
@@ -108,11 +108,11 @@ size_t find_suspicious_process(std::vector<DWORD> &replaced, std::vector<DWORD> 
 #ifdef _DEBUG
         std::cout << ">> Scanning PID: " << std::dec << pid << std::endl;
 #endif
-        hh_args.pesieve_args.pid = pid;
-        if (is_replaced_process(hh_args.pesieve_args)) {
+        unp_args.pesieve_args.pid = pid;
+        if (is_replaced_process(unp_args.pesieve_args)) {
             replaced.push_back(pid);
             bool is_killed = false;
-            if (hh_args.kill_suspicious) {
+            if (unp_args.kill_suspicious) {
                 is_killed = kill_suspicious(pid);
             }
             if (!is_killed) {
@@ -121,4 +121,13 @@ size_t find_suspicious_process(std::vector<DWORD> &replaced, std::vector<DWORD> 
         }
     }
     return replaced.size();
+}
+
+void UnpackScanner::printStats()
+{
+    std::cout << "--------" << std::endl;
+    std::cout << "Finished scan in: " << std::dec << scanTime << " milliseconds" << std::endl;
+    if ((replaced.size() > 0) && unkilled_pids.size()) {
+        std::cout << "WARNING: " << unkilled_pids.size() << " of the suspicious processes are not killed" << std::endl;
+    }
 }
