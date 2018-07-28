@@ -55,6 +55,7 @@ bool kill_till_dead(HANDLE &proc)
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
+        std::cout << "mal_unpack " << VERSION << std::endl;
         std::cout << "args: <input exe> [timeout: ms]" << std::endl;
         system("pause");
         return 0;
@@ -77,14 +78,14 @@ int main(int argc, char *argv[])
         std::cerr << "Could not start the process!" << std::endl;
         return -1;
     }
-    DWORD pid = GetProcessId(proc);
- 
+
     UnpackScanner::t_unp_params hh_args;
     UnpackScanner::args_init(hh_args);
 
     hh_args.kill_suspicious = true;
     hh_args.loop_scanning = true;
     hh_args.pname = file_name;
+    hh_args.start_pid = GetProcessId(proc);
 
     DWORD start_tick = GetTickCount();
     size_t count = 0;

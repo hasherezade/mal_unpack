@@ -1,5 +1,7 @@
 #include "process_util.h"
 #include <iostream>
+#include <Psapi.h>
+#include "pe-sieve\utils\ntddk.h"
 
 HANDLE create_new_process(IN LPSTR path, OUT PROCESS_INFORMATION &pi, DWORD flags)
 {
@@ -43,3 +45,60 @@ HANDLE make_new_process(char* targetPath, DWORD flags)
     return pi.hProcess;
 }
 
+DWORD get_parent_pid(DWORD my_pid)
+{
+    NTSTATUS ntStatus;
+    DWORD dwParentPID = 0xffffffff;
+    HANDLE hProcess;
+    PROCESS_BASIC_INFORMATION pbi;
+    ULONG ulRetLen;
+
+    // fetch NtQueryInformationProcess:
+    typedef NTSTATUS(__stdcall *FPTR_NtQueryInformationProcess) (HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
+
+    FPTR_NtQueryInformationProcess NtQueryInformationProcess
+        = (FPTR_NtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll"), "NtQueryInformationProcess");
+    if (!NtQueryInformationProcess) {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return -1; // cannot fetch the function
+    }
+
+    // get process handle
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION,
+        FALSE,
+        my_pid
+    );
+    // could fail due to invalid PID or insufficiant privileges
+    if (!hProcess) {
+        SetLastError(ERROR_ACCESS_DENIED);
+        return -1;
+    }
+
+    // gather information
+    ntStatus = NtQueryInformationProcess(hProcess,
+        ProcessBasicInformation,
+        (void*)&pbi,
+        sizeof(PROCESS_BASIC_INFORMATION),
+        &ulRetLen
+    );
+    // copy PID on success
+    if (!ntStatus) {
+        dwParentPID = (DWORD)pbi.InheritedFromUniqueProcessId;
+    }
+    CloseHandle(hProcess);
+    return dwParentPID;
+}
+
+bool kill_pid(DWORD pid)
+{
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    if (!hProcess) {
+        return false;
+    }
+    bool is_killed = false;
+    if (TerminateProcess(hProcess, 0)) {
+        is_killed = true;
+    }
+    CloseHandle(hProcess);
+    return is_killed;
+}

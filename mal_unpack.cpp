@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string.h>
 
+#include "process_util.h"
+
 void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 {
     unp_args.pesieve_args = { 0 };
@@ -24,15 +26,7 @@ bool is_replaced_process(t_params args)
     if (report.replaced) {
         std::cout << "Found replaced: " << std::dec << args.pid << std::endl;
         return true;
-    }/*
-    if (report.implanted) {
-        std::cout << "Found implanted: " << std::dec << args.pid << std::endl;
-        return true;
     }
-    if (report.detached) {
-        std::cout << "Found detached: " << std::dec << args.pid << std::endl;
-        return true;
-    }*/
     return false;
 }
 
@@ -68,18 +62,27 @@ bool is_searched_process(DWORD processID, const char* searchedName)
     return false;
 }
 
-bool kill_suspicious(DWORD pid)
+bool UnpackScanner::isTarget(DWORD pid)
 {
-    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-    if (!hProcess) {
+    //identify by PID:
+    if (pid == this->unp_args.start_pid) {
+        return true;
+    }
+    //follow also children:
+    DWORD parent_pid = get_parent_pid(pid);
+    if (parent_pid == this->unp_args.start_pid) {
+        return true;
+    }
+
+    //identify by name:
+    if (unp_args.pname.length() == 0) {
+        //the name is undefined, skip
         return false;
     }
-    bool is_killed = false;
-    if (TerminateProcess(hProcess, 0)) {
-        is_killed = true;
+    if (is_searched_process(pid, unp_args.pname.c_str())) {
+        return true;
     }
-    CloseHandle(hProcess);
-    return is_killed;
+    return false;
 }
 
 size_t UnpackScanner::_scan()
@@ -99,12 +102,11 @@ size_t UnpackScanner::_scan()
     for (i = 0; i < cProcesses; i++) {
         if (aProcesses[i] == 0) continue;
         DWORD pid = aProcesses[i];
-        if (unp_args.pname != "") {
-            if (!is_searched_process(pid, unp_args.pname.c_str())) {
-                //it is not the searched process, so skip it
-                continue;
-            }
+        if (!isTarget(pid)) {
+            //it is not the searched process, so skip it
+            continue;
         }
+
 #ifdef _DEBUG
         std::cout << ">> Scanning PID: " << std::dec << pid << std::endl;
 #endif
@@ -113,7 +115,7 @@ size_t UnpackScanner::_scan()
             replaced.push_back(pid);
             bool is_killed = false;
             if (unp_args.kill_suspicious) {
-                is_killed = kill_suspicious(pid);
+                is_killed = kill_pid(pid);
             }
             if (!is_killed) {
                 unkilled_pids.push_back(pid);

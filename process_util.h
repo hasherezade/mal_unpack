@@ -6,3 +6,7 @@
 HANDLE create_new_process(IN LPSTR path, OUT PROCESS_INFORMATION &pi, DWORD flags);
 
 HANDLE make_new_process(char* targetPath, DWORD flags);
+
+DWORD get_parent_pid(DWORD my_pid);
+
+bool kill_pid(DWORD pid);

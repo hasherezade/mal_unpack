@@ -12,6 +12,7 @@ class UnpackScanner
 {
 public:
     typedef struct {
+        DWORD start_pid; // PID of the initial process
         std::string pname;
         bool loop_scanning;
         bool kill_suspicious;
@@ -38,6 +39,7 @@ public:
 
 protected:
     size_t _scan();
+    bool isTarget(DWORD pid);
 
     t_unp_params &unp_args;
 
