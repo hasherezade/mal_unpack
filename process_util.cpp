@@ -129,4 +129,5 @@ bool kill_till_dead_pid(DWORD pid)
     }
     bool is_killed = kill_till_dead(hProcess);
     CloseHandle(hProcess);
+    return is_killed;
 }
