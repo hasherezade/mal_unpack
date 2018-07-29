@@ -30,6 +30,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 2) {
         std::cout << "mal_unpack " << VERSION << std::endl;
+        std::cout << "CAUTION: Supplied malware will be deployed! Use it on a VM only!" << std::endl;
         std::cout << "args: <input exe> [timeout: ms]" << std::endl;
         system("pause");
         return 0;
