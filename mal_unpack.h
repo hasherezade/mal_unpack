@@ -8,6 +8,8 @@
 #include "pe_sieve_api.h"
 #pragma comment(lib, "pe-sieve.lib")
 
+#include <set>
+
 class UnpackScanner
 {
 public:
@@ -37,7 +39,16 @@ public:
 
     void printStats();
 
+    size_t killRemaining()
+    {
+        size_t remaining = kill_pids(children);
+        remaining += kill_pids(unkilled_pids);
+        return remaining;
+    }
+
 protected:
+    static size_t kill_pids(std::set<DWORD> &pids);
+
     size_t _scan();
     bool isTarget(DWORD pid);
 
@@ -45,8 +56,8 @@ protected:
 
     //results:
     DWORD scanTime;
-    std::vector<DWORD> replaced;
-    std::vector<DWORD> unkilled_pids;
+    std::set<DWORD> replaced;
+    std::set<DWORD> unkilled_pids;
+    std::set<DWORD> children;
 };
-
 

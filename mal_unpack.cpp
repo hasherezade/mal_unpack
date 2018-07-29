@@ -72,6 +72,7 @@ bool UnpackScanner::isTarget(DWORD pid)
     //follow also children:
     DWORD parent_pid = get_parent_pid(pid);
     if (parent_pid == this->unp_args.start_pid) {
+        this->children.insert(pid);
         return true;
     }
 
@@ -113,13 +114,13 @@ size_t UnpackScanner::_scan()
 #endif
         unp_args.pesieve_args.pid = pid;
         if (is_replaced_process(unp_args.pesieve_args)) {
-            replaced.push_back(pid);
+            replaced.insert(pid);
             bool is_killed = false;
             if (unp_args.kill_suspicious) {
                 is_killed = kill_pid(pid);
             }
             if (!is_killed) {
-                unkilled_pids.push_back(pid);
+                unkilled_pids.insert(pid);
             }
         }
     }
@@ -130,7 +131,17 @@ void UnpackScanner::printStats()
 {
     std::cout << "--------" << std::endl;
     std::cout << "Finished scan in: " << std::dec << scanTime << " milliseconds" << std::endl;
-    if ((replaced.size() > 0) && unkilled_pids.size()) {
-        std::cout << "WARNING: " << unkilled_pids.size() << " of the suspicious processes are not killed" << std::endl;
+}
+
+size_t UnpackScanner::kill_pids(std::set<DWORD> &pids)
+{
+    size_t remaining = pids.size();
+    std::set<DWORD>::iterator itr;
+    for (itr = pids.begin(); itr != pids.end(); itr++) {
+        DWORD pid = *itr;
+        if (kill_till_dead_pid(pid)) {
+            remaining--;
+        }
     }
+    return remaining;
 }

@@ -8,15 +8,7 @@
 #include "mal_unpack.h"
 #include "process_util.h"
 
-#define VERSION "0.1"
-
-size_t deploy_scan(UnpackScanner::t_unp_params &hh_args)
-{
-    UnpackScanner scanner(hh_args);
-    size_t found = scanner.scan();
-    scanner.printStats();
-    return found;
-}
+#define VERSION "0.2"
 
 char* get_file_name(char *full_path)
 {
@@ -74,6 +66,8 @@ int main(int argc, char *argv[])
 
     DWORD ret_code = ERROR_INVALID_PARAMETER;
     bool is_unpacked = false;
+    UnpackScanner scanner(hh_args);
+
     do {
         DWORD curr_time = GetTickCount() - start_tick;
         if ((timeout != -1 && timeout > 0) && curr_time > timeout) {
@@ -82,8 +76,11 @@ int main(int argc, char *argv[])
             break;
         }
         count++;
-        size_t res = deploy_scan(hh_args);
-        if (res > 0) {
+        
+        size_t found = scanner.scan();
+        scanner.printStats();
+
+        if (found > 0) {
             is_unpacked = true;
             ret_code = ERROR_SUCCESS;
             break;
@@ -98,5 +95,9 @@ int main(int argc, char *argv[])
         std::cout << "[OK] The initial process got killed." << std::endl;
     }
     CloseHandle(proc);
+    size_t remaining = scanner.killRemaining();
+    if (remaining > 0) {
+        std::cout << "WARNING: " << remaining << " of the related processes are not killed" << std::endl;
+    }
     return ret_code;
 }
