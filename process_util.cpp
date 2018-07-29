@@ -102,3 +102,31 @@ bool kill_pid(DWORD pid)
     CloseHandle(hProcess);
     return is_killed;
 }
+
+bool kill_till_dead(HANDLE &proc)
+{
+    bool is_killed = false;
+    //terminate the original process (if not terminated yet)
+    DWORD exit_code = 0;
+    do {
+        GetExitCodeProcess(proc, &exit_code);
+        if (exit_code == STILL_ACTIVE) {
+            TerminateProcess(proc, 0);
+        }
+        else {
+            is_killed = true;
+            break;
+        }
+    } while (true);
+    return is_killed;
+}
+
+bool kill_till_dead_pid(DWORD pid)
+{
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    if (!hProcess) {
+        return false;
+    }
+    bool is_killed = kill_till_dead(hProcess);
+    CloseHandle(hProcess);
+}
