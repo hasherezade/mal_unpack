@@ -12,6 +12,7 @@ void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
     unp_args.pesieve_args.quiet = true;
     unp_args.pesieve_args.modules_filter = 3;
     unp_args.pesieve_args.no_hooks = true;
+    unp_args.pesieve_args.imp_rec = true;
 
     unp_args.loop_scanning = false;
     unp_args.pname = "";
