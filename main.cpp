@@ -10,6 +10,19 @@
 
 #define VERSION "0.2"
 
+std::string version_to_str(DWORD version)
+{
+    BYTE *chunks = (BYTE*) &version;
+    std::stringstream stream;
+    stream << std::hex <<
+        (int)chunks[3] << "." <<
+        (int)chunks[2] << "." <<
+        (int)chunks[1] << "." <<
+        (int)chunks[0];
+
+    return stream.str();
+}
+
 char* get_file_name(char *full_path)
 {
     if (!full_path) return nullptr;
@@ -30,7 +43,9 @@ int main(int argc, char *argv[])
 {
     if (argc < 2) {
         std::cout << "mal_unpack " << VERSION << std::endl;
-        std::cout << "Dynamic unpacker based on PE-sieve.\n";
+        std::cout << "Dynamic malware unpacker\n";
+        DWORD pesieve_ver = PESieve_version();
+        std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n";
         std::cout << "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n" << std::endl;
         std::cout << "args: <input exe> [timeout: ms]" << std::endl;
         system("pause");
