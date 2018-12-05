@@ -1,14 +1,15 @@
 #include <stdio.h>
+#include <time.h>
 
 #include <string>
 #include <vector>
 #include <iostream>
 #include <sstream>
 
-#include "mal_unpack.h"
+#include "unpack_scanner.h"
 #include "process_util.h"
 
-#define VERSION "0.2"
+#define VERSION "0.2-a"
 
 std::string version_to_str(DWORD version)
 {
@@ -21,6 +22,32 @@ std::string version_to_str(DWORD version)
         (int)chunks[0];
 
     return stream.str();
+}
+
+std::string make_dir_name(std::string baseDir, std::string filename, time_t timestamp)
+{
+    std::stringstream stream;
+    if (baseDir.length() > 0) {
+        stream << baseDir;
+        stream << "\\";
+    }
+    stream << filename << "_";
+    stream << "scan_";
+    stream << timestamp;
+    return stream.str();
+}
+
+bool set_output_dir(t_params &args, const char *new_dir)
+{
+    if (!new_dir) return false;
+
+    size_t new_len = strlen(new_dir);
+    size_t buffer_len = sizeof(args.output_dir);
+    if (new_len > buffer_len) return false;
+
+    memset(args.output_dir, 0, buffer_len);
+    memcpy(args.output_dir, new_dir, new_len);
+    return true;
 }
 
 char* get_file_name(char *full_path)
@@ -77,6 +104,9 @@ int main(int argc, char *argv[])
     hh_args.loop_scanning = true;
     hh_args.pname = file_name;
     hh_args.start_pid = GetProcessId(proc);
+    
+    std::string out_dir = make_dir_name("", file_name, time(NULL));
+    set_output_dir(hh_args.pesieve_args, out_dir.c_str());
 
     DWORD start_tick = GetTickCount();
     size_t count = 0;
