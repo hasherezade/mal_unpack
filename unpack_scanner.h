@@ -10,6 +10,20 @@
 
 #include <set>
 
+class ScanStats {
+public:
+    ScanStats()
+        : scanned(0),detected(0)
+    {
+    }
+
+    void printStats();
+
+    DWORD scanTime;
+    size_t scanned;
+    size_t detected;
+};
+
 class UnpackScanner
 {
 public:
@@ -24,17 +38,16 @@ public:
     static void args_init(t_unp_params &args);
 
     UnpackScanner(t_unp_params &_unp_args)
-        : unp_args(_unp_args),
-        scanTime(0)
+        : unp_args(_unp_args)
     {
     }
 
-    size_t scan()
+    ScanStats scan()
     {
         DWORD start_tick = GetTickCount();
-        size_t found = this->_scan();
-        this->scanTime = GetTickCount() - start_tick;
-        return found;
+        ScanStats stats = this->_scan();
+        stats.scanTime = GetTickCount() - start_tick;
+        return stats;
     }
 
     void printStats();
@@ -49,13 +62,12 @@ public:
 protected:
     static size_t kill_pids(std::set<DWORD> &pids);
 
-    size_t _scan();
+    ScanStats _scan();
     bool isTarget(DWORD pid);
 
     t_unp_params &unp_args;
 
     //results:
-    DWORD scanTime;
     std::set<DWORD> replaced;
     std::set<DWORD> unkilled_pids;
     std::set<DWORD> children;

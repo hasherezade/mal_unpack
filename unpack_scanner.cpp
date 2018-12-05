@@ -20,12 +20,24 @@ void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 
 //---
 
-bool is_replaced_process(t_params args)
+void ScanStats::printStats()
 {
+    std::cout << "--------" << std::endl;
+    std::cout << "Finished scan in: " << std::dec << scanTime << " milliseconds, unpacked: " << this->detected << std::endl;
+}
+
+//---
+
+bool pesieve_scan(t_params args, ScanStats &stats)
+{
+    stats.scanned++;
     t_report report = PESieve_scan(args);
-    if (report.errors) return false;
-    if (report.replaced) {
-        std::cout << "Found replaced: " << std::dec << args.pid << std::endl;
+    if (report.errors) {
+        return false;
+    }
+    if (report.implanted || report.replaced) {
+        stats.detected++;
+        std::cout << "Found potential payload: " << std::dec << args.pid << std::endl;
         return true;
     }
     return false;
@@ -87,15 +99,18 @@ bool UnpackScanner::isTarget(DWORD pid)
     return false;
 }
 
-size_t UnpackScanner::_scan()
+ScanStats UnpackScanner::_scan()
 {
+    DWORD start_tick = GetTickCount();
+
     DWORD aProcesses[1024], cbNeeded, cProcesses;
     unsigned int i;
 
     if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded)) {
-        return NULL;
+        return ScanStats();
     }
 
+    ScanStats myStats;
     //calculate how many process identifiers were returned.
     cProcesses = cbNeeded / sizeof(DWORD);
 
@@ -113,7 +128,7 @@ size_t UnpackScanner::_scan()
         std::cout << ">> Scanning PID: " << std::dec << pid << std::endl;
 #endif
         unp_args.pesieve_args.pid = pid;
-        if (is_replaced_process(unp_args.pesieve_args)) {
+        if (pesieve_scan(unp_args.pesieve_args, myStats)) {
             replaced.insert(pid);
             bool is_killed = false;
             if (unp_args.kill_suspicious) {
@@ -124,13 +139,7 @@ size_t UnpackScanner::_scan()
             }
         }
     }
-    return replaced.size();
-}
-
-void UnpackScanner::printStats()
-{
-    std::cout << "--------" << std::endl;
-    std::cout << "Finished scan in: " << std::dec << scanTime << " milliseconds" << std::endl;
+    return myStats;
 }
 
 size_t UnpackScanner::kill_pids(std::set<DWORD> &pids)

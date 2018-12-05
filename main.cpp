@@ -11,7 +11,7 @@
 
 #define DEFAULT_TIMEOUT 1000
 
-#define VERSION "0.2-a"
+#define VERSION "0.2-b"
 
 std::string version_to_str(DWORD version)
 {
@@ -126,10 +126,10 @@ int main(int argc, char *argv[])
         }
         count++;
         
-        size_t found = scanner.scan();
-        scanner.printStats();
+        ScanStats stats = scanner.scan();
+        stats.printStats();
 
-        if (found > 0) {
+        if (stats.detected > 0) {
             is_unpacked = true;
             ret_code = ERROR_SUCCESS;
             break;
