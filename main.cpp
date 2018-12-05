@@ -9,6 +9,8 @@
 #include "unpack_scanner.h"
 #include "process_util.h"
 
+#define DEFAULT_TIMEOUT 1000
+
 #define VERSION "0.2-a"
 
 std::string version_to_str(DWORD version)
@@ -74,7 +76,7 @@ int main(int argc, char *argv[])
         DWORD pesieve_ver = PESieve_version();
         std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n";
         std::cout << "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n" << std::endl;
-        std::cout << "args: <input exe> [timeout: ms]" << std::endl;
+        std::cout << "args: <input exe> [timeout: ms, default "<< DEFAULT_TIMEOUT <<" ms]" << std::endl;
         system("pause");
         return 0;
     }
@@ -86,7 +88,7 @@ int main(int argc, char *argv[])
     char* file_name = get_file_name(file_path);
     std::cout << "Exe name: " << file_name << std::endl;
 
-    DWORD timeout = (-1); //INFINITE
+    DWORD timeout = DEFAULT_TIMEOUT;
     if (argc >= 3) {
         timeout = atol(argv[2]);
     }
