@@ -23,7 +23,7 @@ void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 void ScanStats::printStats()
 {
     std::cout << "--------" << std::endl;
-    std::cout << "Finished scan in: " << std::dec << scanTime << " milliseconds, unpacked: " << this->detected << std::endl;
+    std::cout << "Finished scan in: " << std::dec << scanTime << " milliseconds, scanned: " << this->scanned << " unpacked: " << this->detected << std::endl;
 }
 
 //---
