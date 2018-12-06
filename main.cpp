@@ -76,8 +76,9 @@ char* get_file_name(char *full_path)
 void save_report(std::string file_name, ScanStats &finalStats)
 {
     std::ofstream report;
-    std::string report_name = std::string(file_name) + "_unpack_report.txt";
-    report.open(report_name);
+    std::string report_name = "unpack.log";
+    report.open(report_name, std::ofstream::out | std::ofstream::app);
+    report << file_name << " : ";
     if (finalStats.detected) {
         report << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds\n";
     }
