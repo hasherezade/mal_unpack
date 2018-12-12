@@ -31,14 +31,13 @@ std::string version_to_str(DWORD version)
     return stream.str();
 }
 
-std::string make_dir_name(std::string baseDir, std::string filename, time_t timestamp)
+std::string make_dir_name(std::string baseDir, time_t timestamp)
 {
     std::stringstream stream;
     if (baseDir.length() > 0) {
         stream << baseDir;
         stream << "\\";
     }
-    stream << filename << "_";
     stream << "scan_";
     stream << timestamp;
     return stream.str();
@@ -96,7 +95,7 @@ int main(int argc, char *argv[])
         DWORD pesieve_ver = PESieve_version();
         std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n";
         std::cout << "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n" << std::endl;
-        std::cout << "args: <input exe> [timeout: ms, default "<< DEFAULT_TIMEOUT <<" ms]" << std::endl;
+        std::cout << "args: <input exe> [timeout: ms, default "<< DEFAULT_TIMEOUT <<" ms] [output directory]" << std::endl;
         system("pause");
         return 0;
     }
@@ -111,6 +110,10 @@ int main(int argc, char *argv[])
     DWORD timeout = DEFAULT_TIMEOUT;
     if (argc >= 3) {
         timeout = atol(argv[2]);
+    }
+    std::string root_dir = std::string(file_name) + ".out";
+    if (argc >= 4) {
+        root_dir = argv[3];
     }
 
     HANDLE proc = make_new_process(file_path, flags);
@@ -127,7 +130,7 @@ int main(int argc, char *argv[])
     hh_args.pname = file_name;
     hh_args.start_pid = GetProcessId(proc);
     
-    std::string out_dir = make_dir_name("", file_name, time(NULL));
+    std::string out_dir = make_dir_name(root_dir, time(NULL));
     set_output_dir(hh_args.pesieve_args, out_dir.c_str());
 
     DWORD start_tick = GetTickCount();
