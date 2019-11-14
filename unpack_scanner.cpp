@@ -63,7 +63,7 @@ bool is_searched_process(DWORD processID, const char* searchedName)
     CHAR szProcessName[MAX_PATH];
     if (get_process_name(hProcess, szProcessName, MAX_PATH)) {
 
-        if (stricmp(szProcessName, searchedName) == 0) {
+        if (_stricmp(szProcessName, searchedName) == 0) {
 #ifdef _DEBUG
             printf("%s  (PID: %u)\n", szProcessName, processID);
 #endif
@@ -81,13 +81,6 @@ bool UnpackScanner::isTarget(DWORD pid)
     if (pid == this->unp_args.start_pid) {
         return true;
     }
-    //follow also children:
-    DWORD parent_pid = get_parent_pid(pid);
-    if (parent_pid == this->unp_args.start_pid) {
-        this->children.insert(pid);
-        return true;
-    }
-
     //identify by name:
     if (unp_args.pname.length() == 0) {
         //the name is undefined, skip
@@ -99,31 +92,17 @@ bool UnpackScanner::isTarget(DWORD pid)
     return false;
 }
 
-ScanStats UnpackScanner::_scan()
+ScanStats UnpackScanner::scanProcesses(std::set<DWORD> pids)
 {
-    DWORD start_tick = GetTickCount();
-
-    DWORD aProcesses[1024], cbNeeded, cProcesses;
-    unsigned int i;
-
-    if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded)) {
-        return ScanStats();
-    }
-
+    size_t i = 0;
     ScanStats myStats;
-    //calculate how many process identifiers were returned.
-    cProcesses = cbNeeded / sizeof(DWORD);
 
-    char image_buf[MAX_PATH] = { 0 };
+    std::set<DWORD>::iterator pid_itr;
+    for (pid_itr = pids.begin(); pid_itr != pids.end(); pid_itr++) {
 
-    for (i = 0; i < cProcesses; i++) {
-        if (aProcesses[i] == 0) continue;
-        DWORD pid = aProcesses[i];
-        if (!isTarget(pid)) {
-            //it is not the searched process, so skip it
-            continue;
-        }
-
+        const DWORD pid = *pid_itr;
+        if (pid == 0) continue;
+        
 #ifdef _DEBUG
         std::cout << ">> Scanning PID: " << std::dec << pid << std::endl;
 #endif
@@ -140,6 +119,79 @@ ScanStats UnpackScanner::_scan()
         }
     }
     return myStats;
+}
+
+size_t UnpackScanner::collectTargets(std::set<DWORD> &_allTargets)
+{
+    const size_t initial_size = _allTargets.size();
+
+    DWORD aProcesses[1024], cbNeeded;
+    if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded)) {
+        return 0;
+    }
+
+    //calculate how many process identifiers were returned.
+    size_t cProcesses = cbNeeded / sizeof(DWORD);
+    char image_buf[MAX_PATH] = { 0 };
+
+    std::set<DWORD> mainTargets;
+    std::map<DWORD, DWORD> childToParentMap;
+    std::map<DWORD, std::set<DWORD> > parentToChildrenMap; //TODO: this should be replaced by a process tree
+
+    for (size_t i = 0; i < cProcesses; i++) {
+        if (aProcesses[i] == 0) continue;
+
+        const DWORD pid = aProcesses[i];
+        const DWORD parent = get_parent_pid(pid);
+
+        if (parent != INVALID_PID_VALUE) {\
+            childToParentMap[pid] = parent;
+            parentToChildrenMap[parent].insert(pid);
+        }
+
+        if (!isTarget(pid)) {
+            //it is not the searched process, so skip it
+            continue;
+        }
+        //std::cout << ">>>>> Adding PID : " << std::dec << pid << " to targets list "<< "\n";
+        mainTargets.insert(pid);
+        _allTargets.insert(pid);
+    }
+    //collect children of the target
+    std::set<DWORD>::const_iterator itr;
+    for (itr = mainTargets.begin(); itr != mainTargets.end(); itr++) {
+        DWORD pid = *itr;
+        //std::cout << "Searching chldren of: " << pid << "\n";
+        std::map<DWORD, std::set<DWORD> >::iterator child_itr = parentToChildrenMap.find(pid);
+        if (child_itr == parentToChildrenMap.end()) {
+            //std::cout << "children not found!\n";
+            continue;
+        }
+        std::set<DWORD> &childrenList = child_itr->second;
+        
+        _allTargets.insert(childrenList.begin(), childrenList.end());
+#ifdef _DEBUG
+        std::cout << ">>>>> Adding " << childrenList.size() << " children of : " << std::dec << pid << " to targets list\n";
+        std::set<DWORD>::iterator itr;
+        for (itr = childrenList.begin(); itr != childrenList.end(); itr++) {
+            std::cout << "Child: " << *itr << "\n";
+        }
+#endif
+    }
+    return _allTargets.size() - initial_size;
+}
+
+ScanStats UnpackScanner::_scan()
+{
+    this->allTargets.clear();
+    size_t collected = -1;
+    do {
+        collected = collectTargets(this->allTargets);
+        Sleep(100);
+    }
+     while (collected != 0);
+
+    return scanProcesses(allTargets);
 }
 
 size_t UnpackScanner::kill_pids(std::set<DWORD> &pids)

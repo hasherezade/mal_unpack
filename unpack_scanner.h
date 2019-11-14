@@ -9,6 +9,7 @@
 #pragma comment(lib, "pe-sieve.lib")
 
 #include <set>
+#include <map>
 
 class ScanStats {
 public:
@@ -54,7 +55,7 @@ public:
 
     size_t killRemaining()
     {
-        size_t remaining = kill_pids(children);
+        size_t remaining = kill_pids(allTargets);
         remaining += kill_pids(unkilled_pids);
         return remaining;
     }
@@ -65,11 +66,15 @@ protected:
     ScanStats _scan();
     bool isTarget(DWORD pid);
 
+    size_t collectTargets(std::set<DWORD> &targets);
+
+    ScanStats scanProcesses(std::set<DWORD> pids);
+
     t_unp_params &unp_args;
 
     //results:
     std::set<DWORD> replaced;
     std::set<DWORD> unkilled_pids;
-    std::set<DWORD> children;
+    std::set<DWORD> allTargets;
 };
 

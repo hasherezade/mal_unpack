@@ -45,48 +45,40 @@ HANDLE make_new_process(char* targetPath, DWORD flags)
     return pi.hProcess;
 }
 
-DWORD get_parent_pid(DWORD my_pid)
+DWORD get_parent_pid(DWORD dwPID)
 {
     NTSTATUS ntStatus;
-    DWORD dwParentPID = 0xffffffff;
+    DWORD dwParentPID = INVALID_PID_VALUE;
     HANDLE hProcess;
     PROCESS_BASIC_INFORMATION pbi;
     ULONG ulRetLen;
 
-    // fetch NtQueryInformationProcess:
+    //  create entry point for 'NtQueryInformationProcess()'
     typedef NTSTATUS(__stdcall *FPTR_NtQueryInformationProcess) (HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
 
     FPTR_NtQueryInformationProcess NtQueryInformationProcess
         = (FPTR_NtQueryInformationProcess)GetProcAddress(GetModuleHandleA("ntdll"), "NtQueryInformationProcess");
-    if (!NtQueryInformationProcess) {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return -1; // cannot fetch the function
-    }
 
-    // get process handle
+    //  get process handle
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION,
         FALSE,
-        my_pid
+        dwPID
     );
-    // could fail due to invalid PID or insufficiant privileges
-    if (!hProcess) {
-        SetLastError(ERROR_ACCESS_DENIED);
-        return -1;
-    }
-
-    // gather information
+    //  could fail due to invalid PID or insufficiant privileges
+    if (!hProcess)
+        return  INVALID_PID_VALUE;
+    //  gather information
     ntStatus = NtQueryInformationProcess(hProcess,
         ProcessBasicInformation,
         (void*)&pbi,
         sizeof(PROCESS_BASIC_INFORMATION),
         &ulRetLen
     );
-    // copy PID on success
-    if (!ntStatus) {
+    //  copy PID on success
+    if (!ntStatus)
         dwParentPID = (DWORD)pbi.InheritedFromUniqueProcessId;
-    }
     CloseHandle(hProcess);
-    return dwParentPID;
+    return  (dwParentPID);
 }
 
 bool kill_pid(DWORD pid)

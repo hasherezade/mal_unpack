@@ -3,6 +3,8 @@
 #include  <Windows.h>
 #include <psapi.h>
 
+#define INVALID_PID_VALUE (DWORD)(-1)
+
 HANDLE create_new_process(IN LPSTR path, OUT PROCESS_INFORMATION &pi, DWORD flags);
 
 HANDLE make_new_process(char* targetPath, DWORD flags);
