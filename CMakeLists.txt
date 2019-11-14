@@ -15,11 +15,13 @@ set (srcs
 	main.cpp
 	process_util.cpp
 	unpack_scanner.cpp
+	util.cpp
 )
 
 set (hdrs
 	process_util.h
 	unpack_scanner.h
+	util.h
 )
 
 # libs

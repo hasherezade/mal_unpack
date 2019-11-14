@@ -12,65 +12,13 @@
 
 #include "unpack_scanner.h"
 #include "process_util.h"
+#include "util.h"
 
 #define DEFAULT_TIMEOUT 1000
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION "0.2-c"
+#define VERSION "0.3-a"
 
-std::string version_to_str(DWORD version)
-{
-    BYTE *chunks = (BYTE*) &version;
-    std::stringstream stream;
-    stream << std::hex <<
-        (int)chunks[3] << "." <<
-        (int)chunks[2] << "." <<
-        (int)chunks[1] << "." <<
-        (int)chunks[0];
-
-    return stream.str();
-}
-
-std::string make_dir_name(std::string baseDir, time_t timestamp)
-{
-    std::stringstream stream;
-    if (baseDir.length() > 0) {
-        stream << baseDir;
-        stream << "\\";
-    }
-    stream << "scan_";
-    stream << timestamp;
-    return stream.str();
-}
-
-bool set_output_dir(pesieve::t_params &args, const char *new_dir)
-{
-    if (!new_dir) return false;
-
-    size_t new_len = strlen(new_dir);
-    size_t buffer_len = sizeof(args.output_dir);
-    if (new_len > buffer_len) return false;
-
-    memset(args.output_dir, 0, buffer_len);
-    memcpy(args.output_dir, new_dir, new_len);
-    return true;
-}
-
-char* get_file_name(char *full_path)
-{
-    if (!full_path) return nullptr;
-
-    size_t len = strlen(full_path);
-    if (len < 2) {
-        return full_path;
-    }
-    for (size_t i = len - 2; i > 0; i--) {
-        if (full_path[i] == '\\' || full_path[i] == '/') {
-            return full_path + (i + 1);
-        }
-    }
-    return full_path;
-}
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
@@ -90,11 +38,20 @@ void save_report(std::string file_name, ScanStats &finalStats)
 int main(int argc, char *argv[])
 {
     if (argc < 2) {
-        std::cout << "mal_unpack " << VERSION << std::endl;
+        std::cout << "mal_unpack " << VERSION;
+        
+#ifdef _WIN64
+        std::cout << " (x64)" << "\n";
+#else
+        std::cout << " (x86)" << "\n";
+#endif
         std::cout << "Dynamic malware unpacker\n";
+        std::cout << "Built on: " << __DATE__ << "\n";
         DWORD pesieve_ver = PESieve_version();
-        std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n";
-        std::cout << "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n" << std::endl;
+        std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
+
+        print_in_color(0xc, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n\n");
+        //std::cout << "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n" << std::endl;
         std::cout << "args: <input exe> [timeout: ms, default "<< DEFAULT_TIMEOUT <<" ms] [output directory]" << std::endl;
         system("pause");
         return 0;
