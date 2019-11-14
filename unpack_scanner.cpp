@@ -121,9 +121,9 @@ ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
     return myStats;
 }
 
-size_t UnpackScanner::collectTargets(OUT std::set<DWORD> &_allTargets, OUT std::set<DWORD> &_primaryTargets)
+size_t UnpackScanner::collectTargets()
 {
-    const size_t initial_size = _allTargets.size();
+    const size_t initial_size = allTargets.size();
 
     DWORD aProcesses[1024], cbNeeded;
     if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded)) {
@@ -134,9 +134,6 @@ size_t UnpackScanner::collectTargets(OUT std::set<DWORD> &_allTargets, OUT std::
     size_t cProcesses = cbNeeded / sizeof(DWORD);
     char image_buf[MAX_PATH] = { 0 };
 
-    std::map<DWORD, DWORD> childToParentMap;
-    std::map<DWORD, std::set<DWORD> > parentToChildrenMap; //TODO: this should be replaced by a process tree
-
     for (size_t i = 0; i < cProcesses; i++) {
         if (aProcesses[i] == 0) continue;
 
@@ -144,7 +141,6 @@ size_t UnpackScanner::collectTargets(OUT std::set<DWORD> &_allTargets, OUT std::
         const DWORD parent = get_parent_pid(pid);
 
         if (parent != INVALID_PID_VALUE) {\
-            childToParentMap[pid] = parent;
             parentToChildrenMap[parent].insert(pid);
         }
 
@@ -153,10 +149,24 @@ size_t UnpackScanner::collectTargets(OUT std::set<DWORD> &_allTargets, OUT std::
             continue;
         }
         //std::cout << ">>>>> Adding PID : " << std::dec << pid << " to targets list "<< "\n";
-        _primaryTargets.insert(pid);
-        _allTargets.insert(pid);
+        allTargets.insert(pid);
     }
-    //collect children of the target
+
+    //collect children of the target: only for the starting PID
+    startingPidTree.insert(this->unp_args.start_pid);
+    size_t tree_depth = 5;
+    do {
+        size_t added_new = collectSecondaryTargets(startingPidTree);
+        //std::cout << "added new: " << added_new << "\n";
+    } while (tree_depth--);
+
+    return allTargets.size() - initial_size;
+}
+
+size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets)
+{
+    size_t initial_size = _primaryTargets.size();
+
     std::set<DWORD>::const_iterator itr;
     for (itr = _primaryTargets.begin(); itr != _primaryTargets.end(); itr++) {
         DWORD pid = *itr;
@@ -167,26 +177,29 @@ size_t UnpackScanner::collectTargets(OUT std::set<DWORD> &_allTargets, OUT std::
             continue;
         }
         std::set<DWORD> &childrenList = child_itr->second;
-        
-        _allTargets.insert(childrenList.begin(), childrenList.end());
+
+        allTargets.insert(childrenList.begin(), childrenList.end());
+        _primaryTargets.insert(childrenList.begin(), childrenList.end());
 #ifdef _DEBUG
-        std::cout << ">>>>> Adding " << childrenList.size() << " children of : " << std::dec << pid << " to targets list\n";
+        std::cout << std::dec << pid << " >>>>> Adding " << childrenList.size() << " children of : " << pid << " to targets list\n";
         std::set<DWORD>::iterator itr;
         for (itr = childrenList.begin(); itr != childrenList.end(); itr++) {
             std::cout << "Child: " << *itr << "\n";
         }
 #endif
     }
-    return _allTargets.size() - initial_size;
+    return _primaryTargets.size() - initial_size;
 }
 
 ScanStats UnpackScanner::_scan()
 {
+    this->parentToChildrenMap.clear();
     this->allTargets.clear();
-    this->primaryTargets.clear();
+    this->startingPidTree.clear();
+
     size_t collected = -1;
     do {
-        collected = collectTargets(this->allTargets, this->primaryTargets);
+        collected = collectTargets();
         Sleep(100);
     }
      while (collected != 0);
