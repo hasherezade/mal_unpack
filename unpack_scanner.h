@@ -64,11 +64,11 @@ protected:
     static size_t kill_pids(std::set<DWORD> &pids);
 
     ScanStats _scan();
-    bool isTarget(DWORD pid);
+    bool isTarget(IN DWORD pid);
 
-    size_t collectTargets(std::set<DWORD> &targets);
+    size_t collectTargets(OUT std::set<DWORD> &targets, OUT std::set<DWORD> &_primaryTargets);
 
-    ScanStats scanProcesses(std::set<DWORD> pids);
+    ScanStats scanProcesses(IN std::set<DWORD> pids);
 
     t_unp_params &unp_args;
 
@@ -76,5 +76,6 @@ protected:
     std::set<DWORD> replaced;
     std::set<DWORD> unkilled_pids;
     std::set<DWORD> allTargets;
+    std::set<DWORD> primaryTargets;
 };
 

@@ -75,7 +75,7 @@ bool is_searched_process(DWORD processID, const char* searchedName)
     return false;
 }
 
-bool UnpackScanner::isTarget(DWORD pid)
+bool UnpackScanner::isTarget(IN DWORD pid)
 {
     //identify by PID:
     if (pid == this->unp_args.start_pid) {
@@ -92,7 +92,7 @@ bool UnpackScanner::isTarget(DWORD pid)
     return false;
 }
 
-ScanStats UnpackScanner::scanProcesses(std::set<DWORD> pids)
+ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
 {
     size_t i = 0;
     ScanStats myStats;
@@ -121,7 +121,7 @@ ScanStats UnpackScanner::scanProcesses(std::set<DWORD> pids)
     return myStats;
 }
 
-size_t UnpackScanner::collectTargets(std::set<DWORD> &_allTargets)
+size_t UnpackScanner::collectTargets(OUT std::set<DWORD> &_allTargets, OUT std::set<DWORD> &_primaryTargets)
 {
     const size_t initial_size = _allTargets.size();
 
@@ -134,7 +134,6 @@ size_t UnpackScanner::collectTargets(std::set<DWORD> &_allTargets)
     size_t cProcesses = cbNeeded / sizeof(DWORD);
     char image_buf[MAX_PATH] = { 0 };
 
-    std::set<DWORD> mainTargets;
     std::map<DWORD, DWORD> childToParentMap;
     std::map<DWORD, std::set<DWORD> > parentToChildrenMap; //TODO: this should be replaced by a process tree
 
@@ -154,12 +153,12 @@ size_t UnpackScanner::collectTargets(std::set<DWORD> &_allTargets)
             continue;
         }
         //std::cout << ">>>>> Adding PID : " << std::dec << pid << " to targets list "<< "\n";
-        mainTargets.insert(pid);
+        _primaryTargets.insert(pid);
         _allTargets.insert(pid);
     }
     //collect children of the target
     std::set<DWORD>::const_iterator itr;
-    for (itr = mainTargets.begin(); itr != mainTargets.end(); itr++) {
+    for (itr = _primaryTargets.begin(); itr != _primaryTargets.end(); itr++) {
         DWORD pid = *itr;
         //std::cout << "Searching chldren of: " << pid << "\n";
         std::map<DWORD, std::set<DWORD> >::iterator child_itr = parentToChildrenMap.find(pid);
@@ -184,9 +183,10 @@ size_t UnpackScanner::collectTargets(std::set<DWORD> &_allTargets)
 ScanStats UnpackScanner::_scan()
 {
     this->allTargets.clear();
+    this->primaryTargets.clear();
     size_t collected = -1;
     do {
-        collected = collectTargets(this->allTargets);
+        collected = collectTargets(this->allTargets, this->primaryTargets);
         Sleep(100);
     }
      while (collected != 0);
@@ -194,7 +194,7 @@ ScanStats UnpackScanner::_scan()
     return scanProcesses(allTargets);
 }
 
-size_t UnpackScanner::kill_pids(std::set<DWORD> &pids)
+size_t UnpackScanner::kill_pids(IN std::set<DWORD> &pids)
 {
     size_t remaining = pids.size();
     std::set<DWORD>::iterator itr;
