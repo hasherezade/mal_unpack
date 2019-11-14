@@ -129,6 +129,8 @@ size_t UnpackScanner::collectTargets()
     if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded)) {
         return 0;
     }
+    
+    std::set<DWORD> mainTargets;
 
     //calculate how many process identifiers were returned.
     size_t cProcesses = cbNeeded / sizeof(DWORD);
@@ -150,16 +152,22 @@ size_t UnpackScanner::collectTargets()
         }
         //std::cout << ">>>>> Adding PID : " << std::dec << pid << " to targets list "<< "\n";
         allTargets.insert(pid);
+        mainTargets.insert(pid);
     }
 
     //collect children of the target: only for the starting PID
     startingPidTree.insert(this->unp_args.start_pid);
-    size_t tree_depth = 5;
-    do {
+    const size_t tree_depth = 5;
+    for (size_t i = 0; i < tree_depth; i++) {
         size_t added_new = collectSecondaryTargets(startingPidTree);
         //std::cout << "added new: " << added_new << "\n";
-    } while (tree_depth--);
+    }
 
+    //collect secondary targets: children of all other processes with matching name
+    for (size_t i = 0; i < tree_depth; i++) {
+        size_t added_new = collectSecondaryTargets(mainTargets);
+        //std::cout << "added new: " << added_new << "\n";
+    }
     return allTargets.size() - initial_size;
 }
 
