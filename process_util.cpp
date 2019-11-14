@@ -104,15 +104,16 @@ bool kill_till_dead(HANDLE &proc)
         GetExitCodeProcess(proc, &exit_code);
         if (exit_code == STILL_ACTIVE) {
             TerminateProcess(proc, 0);
-        }
-        if (GetLastError() == ERROR_ACCESS_DENIED) {
-            std::cerr << "Could not kill the process: access denied!" << std::endl;
-            break; //process is elevated, cannot kill it:
+            if (GetLastError() == ERROR_ACCESS_DENIED) {
+                std::cerr << "Could not kill the process: access denied!" << std::endl;
+                break; //process is elevated, cannot kill it:
+            }
         }
         else {
             is_killed = true;
             break;
         }
+
     } while (true);
     return is_killed;
 }
