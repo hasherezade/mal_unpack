@@ -32,7 +32,7 @@ public:
         std::string pname;
         bool loop_scanning;
         bool kill_suspicious;
-        t_params pesieve_args; //PE-sieve parameters
+        pesieve::t_params pesieve_args; //PE-sieve parameters
     } t_unp_params;
 
     static void args_init(t_unp_params &args);

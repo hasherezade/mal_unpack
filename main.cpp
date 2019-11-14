@@ -43,7 +43,7 @@ std::string make_dir_name(std::string baseDir, time_t timestamp)
     return stream.str();
 }
 
-bool set_output_dir(t_params &args, const char *new_dir)
+bool set_output_dir(pesieve::t_params &args, const char *new_dir)
 {
     if (!new_dir) return false;
 
