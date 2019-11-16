@@ -37,10 +37,13 @@ target_link_libraries ( ${PROJECT_NAME} ${M_PESIEVE} )
 # dependencies
 add_dependencies( ${PROJECT_NAME} ${M_PESIEVE} )
 
+#install
+INSTALL( TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_BINARY_DIR} COMPONENT ${PROJECT_NAME} )
+
 # Setup testing
 if(MU_BUILD_TESTING)
 	enable_testing()
 
 	# 0) does the application run
-	add_test (TestRuns hollows_hunter)
+	add_test ( TestRuns ${PROJECT_NAME} )
 endif()
