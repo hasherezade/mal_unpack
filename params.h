@@ -14,6 +14,7 @@ using namespace paramkit;
 #define PARAM_DATA "data"
 #define PARAM_MINDUMP "minidmp"
 #define PARAM_SHELLCODE "shellc"
+#define PARAM_HOOKS "hooks"
 
 typedef struct {
     char exe_path[MAX_PATH];
@@ -44,7 +45,10 @@ public:
         this->setInfo(PARAM_MINDUMP, "Create a minidump of the detected process");
 
         this->addParam(new BoolParam(PARAM_SHELLCODE, false));
-        this->setInfo(PARAM_SHELLCODE, "Dump shellcode from the detected process");
+        this->setInfo(PARAM_SHELLCODE, "Detect shellcodes");
+
+        this->addParam(new BoolParam(PARAM_HOOKS, false));
+        this->setInfo(PARAM_HOOKS, "Detect hooks and patches");
     }
 
     void fillStruct(t_params_struct &ps)
@@ -68,5 +72,8 @@ public:
 
         BoolParam *myShellc = dynamic_cast<BoolParam*>(this->getParam(PARAM_SHELLCODE));
         if (myShellc) ps.hh_args.pesieve_args.shellcode = myShellc->value;
+
+        BoolParam *myHooks = dynamic_cast<BoolParam*>(this->getParam(PARAM_HOOKS));
+        if (myHooks) ps.hh_args.pesieve_args.no_hooks = !(myHooks->value);
     }
 };
