@@ -6,6 +6,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "params.h"
+
 // basic file operations
 #include <iostream>
 #include <fstream>
@@ -14,11 +16,9 @@
 #include "process_util.h"
 #include "util.h"
 
-#define DEFAULT_TIMEOUT 1000
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
 #define VERSION "0.3-a"
-
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
@@ -37,6 +37,9 @@ void save_report(std::string file_name, ScanStats &finalStats)
 
 int main(int argc, char *argv[])
 {
+    UnpackParams uParams;
+    t_params_struct params = { 0 };
+
     if (argc < 2) {
         std::cout << "mal_unpack " << VERSION;
         
@@ -50,28 +53,32 @@ int main(int argc, char *argv[])
         DWORD pesieve_ver = PESieve_version();
         std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
 
-        print_in_color(0xc, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n\n");
-        //std::cout << "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n" << std::endl;
-        std::cout << "args: <input exe> [timeout: ms, default "<< DEFAULT_TIMEOUT <<" ms] [output directory]" << std::endl;
+        print_in_color(0xc, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n");
+        std::cout << "Args:\n\n";
+        uParams.info();
         system("pause");
         return 0;
     }
+    if (!uParams.parse(argc, argv) || !uParams.hasRequiredFilled()) {
+        uParams.info();
+        return 0;
+    }
+
+    uParams.fillStruct(params);
 
     DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
-    char* file_path = argv[1];
+    char* file_path = params.exe_path;
     std::cout << "Starting the process: " << file_path << std::endl;
 
     char* file_name = get_file_name(file_path);
     std::cout << "Exe name: " << file_name << std::endl;
 
-    DWORD timeout = DEFAULT_TIMEOUT;
-    if (argc >= 3) {
-        timeout = atol(argv[2]);
-    }
+    DWORD timeout = params.timeout;
     std::string root_dir = std::string(file_name) + ".out";
-    if (argc >= 4) {
-        root_dir = argv[3];
+    if (strlen(params.out_dir) > 0) {
+        root_dir = std::string(params.out_dir) + "\\" + root_dir;
     }
+    std::cout << "Root Dir: " << root_dir << "\n";
 
     HANDLE proc = make_new_process(file_path, flags);
     if (!proc) {
