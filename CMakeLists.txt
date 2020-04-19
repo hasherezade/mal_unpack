@@ -45,12 +45,12 @@ target_link_libraries ( ${PROJECT_NAME} ${M_PESIEVE} ${M_PARAMKIT} )
 add_dependencies( ${PROJECT_NAME} ${M_PESIEVE} ${M_PARAMKIT} )
 
 #install
-INSTALL( TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_BINARY_DIR} COMPONENT ${PROJECT_NAME} )
+INSTALL( TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT ${PROJECT_NAME} )
 
 # Setup testing
 if(MU_BUILD_TESTING)
 	enable_testing()
 
 	# 0) does the application run
-	add_test ( TestRuns ${PROJECT_NAME} )
+	add_test ( TestRuns ${CMAKE_INSTALL_PREFIX}\\${PROJECT_NAME} )
 endif()
