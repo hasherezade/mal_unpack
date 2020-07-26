@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 #endif
         std::cout << "Dynamic malware unpacker\n";
         std::cout << "Built on: " << __DATE__ << "\n";
-        DWORD pesieve_ver = PESieve_version();
+        DWORD pesieve_ver = PESieve_version;
         std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
 
         print_in_color(0xc, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n");
