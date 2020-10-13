@@ -33,6 +33,10 @@ set (hdrs
 add_subdirectory ( ${PARAMKIT_DIR} )
 
 # libs
+if (NOT PESIEVE_AS_DLL)
+	set ( PESIEVE_AS_STATIC_LIB ON CACHE BOOL "Enable building PE-sieve as a static library" FORCE)
+endif()
+
 if (NOT PESIEVE_AS_STATIC_LIB)
 	set ( PESIEVE_AS_DLL ON CACHE BOOL "Enable building PE-sieve as a DLL" FORCE)
 endif()
