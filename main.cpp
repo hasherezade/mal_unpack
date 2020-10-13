@@ -18,7 +18,7 @@
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION "0.3-a"
+#define VERSION "0.3-b"
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
@@ -64,7 +64,9 @@ int main(int argc, char *argv[])
         uParams.info(true);
         return 0;
     }
-
+    if (!set_debug_privilege()) {
+        std::cerr << "[-] Could not set debug privilege" << std::endl;
+    }
     uParams.fillStruct(params);
 
     DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;

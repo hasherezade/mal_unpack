@@ -15,3 +15,5 @@ bool kill_pid(DWORD pid);
 
 bool kill_till_dead(HANDLE &proc);
 bool kill_till_dead_pid(DWORD pid);
+
+bool set_debug_privilege();
