@@ -13,16 +13,6 @@ std::string version_to_str(DWORD version)
     return stream.str();
 }
 
-void print_in_color(int color, std::string text)
-{
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    FlushConsoleInputBuffer(hConsole);
-    SetConsoleTextAttribute(hConsole, color); // back to default color
-    std::cout << text;
-    FlushConsoleInputBuffer(hConsole);
-    SetConsoleTextAttribute(hConsole, 7); // back to default color
-}
-
 std::string make_dir_name(std::string baseDir, time_t timestamp)
 {
     std::stringstream stream;

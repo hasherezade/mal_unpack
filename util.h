@@ -9,8 +9,6 @@
 
 std::string version_to_str(DWORD version);
 
-void print_in_color(int color, std::string text);
-
 std::string make_dir_name(std::string baseDir, time_t timestamp);
 
 bool set_output_dir(pesieve::t_params &args, const char *new_dir);
