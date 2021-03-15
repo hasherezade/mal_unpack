@@ -8,6 +8,7 @@
 #include "pe_sieve_api.h"
 #pragma comment(lib, "pe-sieve.lib")
 
+#include <iostream>
 #include <set>
 #include <map>
 
