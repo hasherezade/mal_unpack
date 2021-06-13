@@ -10,7 +10,6 @@ void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
     unp_args.pesieve_args = { 0 };
 
     unp_args.pesieve_args.quiet = true;
-    unp_args.pesieve_args.modules_filter = 3;
     unp_args.pesieve_args.no_hooks = true;
     unp_args.pesieve_args.imprec_mode = pesieve::PE_IMPREC_AUTO;
 
