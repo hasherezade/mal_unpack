@@ -62,6 +62,7 @@ public:
         if (myExe) {
             myExe->copyToCStr(ps.exe_path, sizeof(ps.exe_path));
         }
+
         StringParam *myDir = dynamic_cast<StringParam*>(this->getParam(PARAM_OUT_DIR));
         if (myDir) {
             myDir->copyToCStr(ps.out_dir, sizeof(ps.out_dir));
@@ -71,15 +72,20 @@ public:
 
         //TODO: it should be an enum parameter
         IntParam *myData = dynamic_cast<IntParam*>(this->getParam(PARAM_DATA));
-        if (myData) ps.hh_args.pesieve_args.data = (pesieve::t_data_scan_mode) myData->value;
-
+        if (myData && myData->isSet()) {
+            ps.hh_args.pesieve_args.data = (pesieve::t_data_scan_mode) myData->value;
+        }
         BoolParam *myMinidump = dynamic_cast<BoolParam*>(this->getParam(PARAM_MINDUMP));
-        if (myMinidump) ps.hh_args.pesieve_args.minidump = myMinidump->value;
-
+        if (myMinidump && myMinidump->isSet()) {
+            ps.hh_args.pesieve_args.minidump = myMinidump->value;
+        }
         BoolParam *myShellc = dynamic_cast<BoolParam*>(this->getParam(PARAM_SHELLCODE));
-        if (myShellc) ps.hh_args.pesieve_args.shellcode = myShellc->value;
-
+        if (myShellc && myShellc->isSet()) {
+            ps.hh_args.pesieve_args.shellcode = myShellc->value;
+        }
         BoolParam *myHooks = dynamic_cast<BoolParam*>(this->getParam(PARAM_HOOKS));
-        if (myHooks) ps.hh_args.pesieve_args.no_hooks = !(myHooks->value);
+        if (myHooks && myHooks->isSet()) {
+            ps.hh_args.pesieve_args.no_hooks = !(myHooks->value);
+        }
     }
 };
