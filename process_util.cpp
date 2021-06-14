@@ -3,17 +3,18 @@
 #include <Psapi.h>
 #include "pe-sieve\utils\ntddk.h"
 
-HANDLE create_new_process(IN LPSTR path, OUT PROCESS_INFORMATION &pi, DWORD flags)
+HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags)
 {
+    std::string full_cmd = std::string(exe_path) + " " + std::string(cmd);
     STARTUPINFOA si;
     memset(&si, 0, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
 
     memset(&pi, 0, sizeof(PROCESS_INFORMATION));
-
+    std::cout << "Commandline: " << cmd << std::endl;
     if (!CreateProcessA(
-        NULL,
-        path,
+        exe_path,
+        (LPSTR)full_cmd.c_str(),
         NULL, //lpProcessAttributes
         NULL, //lpThreadAttributes
         FALSE, //bInheritHandles
@@ -32,11 +33,11 @@ HANDLE create_new_process(IN LPSTR path, OUT PROCESS_INFORMATION &pi, DWORD flag
     return pi.hProcess;
 }
 
-HANDLE make_new_process(char* targetPath, DWORD flags)
+HANDLE make_new_process(char* targetPath, char* cmdLine, DWORD flags)
 {
     //create target process:
     PROCESS_INFORMATION pi;
-    if (!create_new_process(targetPath, pi, flags)) {
+    if (!create_new_process(targetPath, cmdLine, pi, flags)) {
         return false;
     }
 #ifdef _DEBUG

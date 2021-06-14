@@ -18,7 +18,7 @@
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION "0.3-b"
+#define VERSION "0.4"
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
@@ -40,7 +40,6 @@ int main(int argc, char *argv[])
     UnpackParams uParams;
     t_params_struct params = { 0 };
     UnpackScanner::args_init(params.hh_args);
-
     if (argc < 2) {
         std::cout << "mal_unpack " << VERSION;
         
@@ -69,11 +68,10 @@ int main(int argc, char *argv[])
     }
     uParams.fillStruct(params);
 
-    DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
-    char* file_path = params.exe_path;
-    std::cout << "Starting the process: " << file_path << std::endl;
+    std::cout << "Starting the process: " << params.exe_path << std::endl;
+    std::cout << "With commandline: \"" << params.exe_cmd << "\"" << std::endl;
 
-    char* file_name = get_file_name(file_path);
+    char* file_name = get_file_name(params.exe_path);
     std::cout << "Exe name: " << file_name << std::endl;
 
     DWORD timeout = params.timeout;
@@ -83,7 +81,8 @@ int main(int argc, char *argv[])
     }
     std::cout << "Root Dir: " << root_dir << "\n";
 
-    HANDLE proc = make_new_process(file_path, flags);
+    const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
+    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
         return -1;

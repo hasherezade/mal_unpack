@@ -101,7 +101,6 @@ ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
 
         const DWORD pid = *pid_itr;
         if (pid == 0) continue;
-        
 #ifdef _DEBUG
         std::cout << ">> Scanning PID: " << std::dec << pid << std::endl;
 #endif

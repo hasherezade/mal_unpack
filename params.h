@@ -8,6 +8,7 @@ using namespace paramkit;
 #define DEFAULT_TIMEOUT 1000
 
 #define PARAM_EXE "exe"
+#define PARAM_CMD "cmd"
 #define PARAM_TIMEOUT "timeout"
 #define PARAM_OUT_DIR "dir"
 
@@ -18,6 +19,7 @@ using namespace paramkit;
 
 typedef struct {
     char exe_path[MAX_PATH];
+    char exe_cmd[MAX_PATH];
     char out_dir[MAX_PATH];
     DWORD timeout;
     UnpackScanner::t_unp_params hh_args;
@@ -31,6 +33,9 @@ public:
     {
         this->addParam(new StringParam(PARAM_EXE, true));
         this->setInfo(PARAM_EXE, "Input exe (to be run)");
+
+        this->addParam(new StringParam(PARAM_CMD, false));
+        this->setInfo(PARAM_CMD, "Commandline arguments for the input exe");
 
         this->addParam(new IntParam(PARAM_TIMEOUT, true));
         this->setInfo(PARAM_TIMEOUT, "Timeout: ms");
@@ -62,7 +67,10 @@ public:
         if (myExe) {
             myExe->copyToCStr(ps.exe_path, sizeof(ps.exe_path));
         }
-
+        StringParam *myCmd = dynamic_cast<StringParam*>(this->getParam(PARAM_CMD));
+        if (myCmd) {
+            myCmd->copyToCStr(ps.exe_cmd, sizeof(ps.exe_cmd));
+        }
         StringParam *myDir = dynamic_cast<StringParam*>(this->getParam(PARAM_OUT_DIR));
         if (myDir) {
             myDir->copyToCStr(ps.out_dir, sizeof(ps.out_dir));
