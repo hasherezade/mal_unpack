@@ -17,5 +17,5 @@ Clone
 -
 
 ```console
-clone --recursive https://github.com/hasherezade/mal_unpack.git
+git clone --recursive https://github.com/hasherezade/mal_unpack.git
 ```
