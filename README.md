@@ -15,6 +15,7 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 
 Clone
 -
+Use **recursive clone** to get the repo together with submodules:
 
 ```console
 git clone --recursive https://github.com/hasherezade/mal_unpack.git
