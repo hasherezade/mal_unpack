@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
         return 0;
     }
     if (!uParams.parse(argc, argv) || !uParams.hasRequiredFilled()) {
-        uParams.info(true);
         return 0;
     }
     if (!set_debug_privilege()) {
