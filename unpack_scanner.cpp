@@ -11,6 +11,7 @@ void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 
     unp_args.pesieve_args.quiet = true;
     unp_args.pesieve_args.no_hooks = true;
+    unp_args.pesieve_args.make_reflection = true;
     unp_args.pesieve_args.imprec_mode = pesieve::PE_IMPREC_AUTO;
 
     unp_args.loop_scanning = false;
