@@ -61,6 +61,21 @@ public:
 
         this->addParam(new BoolParam(PARAM_HOOKS, false));
         this->setInfo(PARAM_HOOKS, "Detect hooks and patches");
+
+        //optional: group parameters
+        std::string str_group = "output options";
+        this->addGroup(new ParamGroup(str_group));
+        this->addParamToGroup(PARAM_OUT_DIR, str_group);
+
+        str_group = "scan options";
+        this->addGroup(new ParamGroup(str_group));
+        this->addParamToGroup(PARAM_DATA, str_group);
+        this->addParamToGroup(PARAM_SHELLCODE, str_group);
+        this->addParamToGroup(PARAM_HOOKS, str_group);
+
+        str_group = "dump options";
+        this->addGroup(new ParamGroup(str_group));
+        this->addParamToGroup(PARAM_MINDUMP, str_group);
     }
 
     void fillStruct(t_params_struct &ps)
