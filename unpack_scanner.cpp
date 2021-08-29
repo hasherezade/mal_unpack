@@ -220,7 +220,7 @@ size_t UnpackScanner::kill_pids(IN std::set<DWORD> &pids)
     std::set<DWORD>::iterator itr;
     for (itr = pids.begin(); itr != pids.end(); itr++) {
         DWORD pid = *itr;
-        if (kill_till_dead_pid(pid)) {
+        if (kill_pid(pid)) {
             remaining--;
         }
     }

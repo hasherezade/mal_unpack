@@ -84,8 +84,15 @@ DWORD get_parent_pid(DWORD dwPID)
 
 bool kill_pid(DWORD pid)
 {
+#ifdef _DEBUG
+    std::cout << "[!] Killing PID: " << std::dec << pid << std::endl;
+#endif
     HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
     if (!hProcess) {
+        const DWORD err = GetLastError();
+        if (err == ERROR_INVALID_PARAMETER) {
+            return true; // already killed
+        }
         return false;
     }
     bool is_killed = false;
@@ -96,39 +103,6 @@ bool kill_pid(DWORD pid)
     return is_killed;
 }
 
-bool kill_till_dead(HANDLE &proc)
-{
-    bool is_killed = false;
-    //terminate the original process (if not terminated yet)
-    DWORD exit_code = 0;
-    do {
-        GetExitCodeProcess(proc, &exit_code);
-        if (exit_code == STILL_ACTIVE) {
-            TerminateProcess(proc, 0);
-            if (GetLastError() == ERROR_ACCESS_DENIED) {
-                std::cerr << "Could not kill the process: access denied!" << std::endl;
-                break; //process is elevated, cannot kill it:
-            }
-        }
-        else {
-            is_killed = true;
-            break;
-        }
-
-    } while (true);
-    return is_killed;
-}
-
-bool kill_till_dead_pid(DWORD pid)
-{
-    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
-    if (!hProcess) {
-        return false;
-    }
-    bool is_killed = kill_till_dead(hProcess);
-    CloseHandle(hProcess);
-    return is_killed;
-}
 
 /*
 based on: https://support.microsoft.com/en-us/help/131065/how-to-obtain-a-handle-to-any-process-with-sedebugprivilege

@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
     if (is_unpacked) {
         std::cout << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds; " << count << " attempts." << std::endl;
     }
-    if (kill_till_dead(proc)) {
+    if (kill_pid(GetProcessId(proc))) {
         std::cout << "[OK] The initial process got killed." << std::endl;
     }
     CloseHandle(proc);
