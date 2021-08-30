@@ -16,6 +16,7 @@ using namespace paramkit;
 #define PARAM_MINDUMP "minidmp"
 #define PARAM_SHELLCODE "shellc"
 #define PARAM_HOOKS "hooks"
+#define PARAM_IMP "imp"
 #define PARAM_TRIGGER "trigger"
 
 typedef enum {
@@ -54,13 +55,14 @@ public:
         EnumParam *dataParam = new EnumParam(PARAM_DATA, "data_scan_mode", false);
         if (dataParam) {
             this->addParam(dataParam);
+            this->setInfo(PARAM_DATA, "Set if non-executable pages should be scanned");
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_NO_SCAN, "none: do not scan non-executable pages");
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_DOTNET, ".NET: scan non-executable in .NET applications");
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_NO_DEP, "if no DEP: scan non-exec if DEP is disabled (or if is .NET)");
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_ALWAYS, "always: scan non-executable pages unconditionally");
         }
 
-        this->setInfo(PARAM_DATA, "Set if non-executable pages should be scanned");
+        
 
         this->addParam(new BoolParam(PARAM_MINDUMP, false));
         this->setInfo(PARAM_MINDUMP, "Create a minidump of the detected process");
@@ -74,11 +76,19 @@ public:
         EnumParam *triggerParam = new EnumParam(PARAM_TRIGGER, "term_trigger", false);
         if (triggerParam) {
             this->addParam(triggerParam);
+            this->setInfo(PARAM_TRIGGER, "a trigger causing unpacker to terminate");
             triggerParam->addEnumValue(t_term_trigger::TRIG_TIMEOUT, "on timeout ONLY (no matter detected content)");
             triggerParam->addEnumValue(t_term_trigger::TRIG_ANY, "if any suspicious indicator detected");
         }
 
-        this->setInfo(PARAM_TRIGGER, "a trigger causing unpacker to terminate");
+        EnumParam *impParam = new EnumParam(PARAM_IMP, "imp_rec", false);
+        if (impParam) {
+            this->addParam(impParam);
+            this->setInfo(PARAM_IMP, "in which mode ImportTable should be revocered");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "try to autodetect the most suitable mode (default)");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "recover erased parts of partialy damaged ImportTable");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD, "rebuild ImportTable from scratch");
+        }
 
         //optional: group parameters
         std::string str_group = "output options";
@@ -94,6 +104,7 @@ public:
         str_group = "dump options";
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_MINDUMP, str_group);
+        this->addParamToGroup(PARAM_IMP, str_group);
     }
 
     void fillStruct(t_params_struct &ps)
@@ -132,6 +143,10 @@ public:
         BoolParam *myHooks = dynamic_cast<BoolParam*>(this->getParam(PARAM_HOOKS));
         if (myHooks && myHooks->isSet()) {
             ps.hh_args.pesieve_args.no_hooks = !(myHooks->value);
+        }
+        EnumParam *myImp = dynamic_cast<EnumParam*>(this->getParam(PARAM_IMP));
+        if (myImp && myImp->isSet()) {
+            ps.hh_args.pesieve_args.imprec_mode = (pesieve::t_imprec_mode)myImp->value;
         }
     }
 };
