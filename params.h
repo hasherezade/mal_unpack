@@ -77,17 +77,17 @@ public:
         if (triggerParam) {
             this->addParam(triggerParam);
             this->setInfo(PARAM_TRIGGER, "a trigger causing unpacker to terminate");
-            triggerParam->addEnumValue(t_term_trigger::TRIG_TIMEOUT, "on timeout ONLY (no matter detected content)");
-            triggerParam->addEnumValue(t_term_trigger::TRIG_ANY, "if any suspicious indicator detected");
+            triggerParam->addEnumValue(t_term_trigger::TRIG_TIMEOUT, "T", "on timeout ONLY (no matter detected content)");
+            triggerParam->addEnumValue(t_term_trigger::TRIG_ANY, "A", "if any suspicious indicator detected [DEFAULT]");
         }
 
         EnumParam *impParam = new EnumParam(PARAM_IMP, "imp_rec", false);
         if (impParam) {
             this->addParam(impParam);
             this->setInfo(PARAM_IMP, "in which mode ImportTable should be revocered");
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "try to autodetect the most suitable mode (default)");
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "recover erased parts of partialy damaged ImportTable");
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD, "rebuild ImportTable from scratch");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "A", "try to autodetect the most suitable mode [DEFAULT]");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "U", "unrase the erased parts of partialy damaged ImportTable");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD, "R", "rebuild ImportTable from scratch");
         }
 
         //optional: group parameters
