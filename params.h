@@ -44,8 +44,8 @@ public:
         this->setInfo(PARAM_OUT_DIR, "Output directory");
 
         EnumParam *dataParam = new EnumParam(PARAM_DATA, "data_scan_mode", false);
-        this->addParam(dataParam);
         if (dataParam) {
+            this->addParam(dataParam);
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_NO_SCAN, "none: do not scan non-executable pages");
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_DOTNET, ".NET: scan non-executable in .NET applications");
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_NO_DEP, "if no DEP: scan non-exec if DEP is disabled (or if is .NET)");
