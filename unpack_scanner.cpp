@@ -32,12 +32,9 @@ bool pesieve_scan(pesieve::t_params args, ScanStats &stats)
 {
     stats.scanned++;
     pesieve::t_report report = PESieve_scan(args);
-    if (report.errors) {
-        return false;
-    }
-    if (report.implanted_pe || report.replaced) {
+    if (report.suspicious) {
         stats.detected++;
-        std::cout << "Found potential payload: " << std::dec << args.pid << std::endl;
+        std::cout << "Found suspicious: " << std::dec << args.pid << std::endl;
         return true;
     }
     return false;
