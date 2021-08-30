@@ -224,3 +224,30 @@ size_t map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, s
     CloseHandle(hProcessSnapShot);
     return count;
 }
+
+bool get_process_name(IN HANDLE hProcess, OUT LPSTR nameBuf, IN DWORD nameMax)
+{
+    HMODULE hMod;
+    DWORD cbNeeded;
+
+    if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded)) {
+        GetModuleBaseNameA(hProcess, hMod, nameBuf, nameMax);
+        return true;
+    }
+    return false;
+}
+
+std::string get_process_name_str(DWORD processID)
+{
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
+    if (hProcess == NULL) {
+        return "";
+    }
+    CHAR szProcessName[MAX_PATH];
+    bool is_ok = get_process_name(hProcess, szProcessName, MAX_PATH);
+    CloseHandle(hProcess);
+    if (is_ok) {
+        return szProcessName;
+    }
+    return "";
+}

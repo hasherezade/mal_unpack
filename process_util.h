@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <psapi.h>
+#include <string>
 #include <map>
 #include <set>
 
@@ -18,3 +19,7 @@ bool kill_pid(DWORD pid);
 bool set_debug_privilege();
 
 size_t map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap);
+
+bool get_process_name(IN HANDLE hProcess, OUT LPSTR nameBuf, IN DWORD nameMax);
+
+std::string get_process_name_str(DWORD processID);

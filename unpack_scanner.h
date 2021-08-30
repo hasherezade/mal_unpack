@@ -56,7 +56,7 @@ public:
 
     size_t killRemaining()
     {
-        size_t remaining = kill_pids(startingPidTree);
+        size_t remaining = kill_pids(allTargets);
         remaining += kill_pids(unkilled_pids);
         return remaining;
     }
@@ -65,10 +65,10 @@ protected:
     static size_t kill_pids(std::set<DWORD> &pids);
 
     ScanStats _scan();
-    bool isTarget(IN DWORD pid);
 
     size_t collectTargets();
-    size_t collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets);
+    size_t collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets, OUT std::set<DWORD> &_secondaryTargets);
+    size_t collectByTheSameName(IN std::set<DWORD> allPids, OUT std::set<DWORD> &targets);
 
     ScanStats scanProcesses(IN std::set<DWORD> pids);
 
@@ -76,9 +76,7 @@ protected:
 
     //results:
     std::set<DWORD> unkilled_pids;
-
     std::set<DWORD> allTargets;
-    std::set<DWORD> startingPidTree;
     std::map<DWORD, std::set<DWORD> > parentToChildrenMap;
 };
 
