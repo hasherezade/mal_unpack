@@ -16,12 +16,20 @@ using namespace paramkit;
 #define PARAM_MINDUMP "minidmp"
 #define PARAM_SHELLCODE "shellc"
 #define PARAM_HOOKS "hooks"
+#define PARAM_TRIGGER "trigger"
+
+typedef enum {
+    TRIG_TIMEOUT = 0,
+    TRIG_ANY = 1 ,
+    COUNT_TRIG
+} t_term_trigger;
 
 typedef struct {
     char exe_path[MAX_PATH];
     char exe_cmd[MAX_PATH];
     char out_dir[MAX_PATH];
     DWORD timeout;
+    t_term_trigger trigger;
     UnpackScanner::t_unp_params hh_args;
 } t_params_struct;
 
@@ -51,6 +59,7 @@ public:
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_NO_DEP, "if no DEP: scan non-exec if DEP is disabled (or if is .NET)");
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_ALWAYS, "always: scan non-executable pages unconditionally");
         }
+
         this->setInfo(PARAM_DATA, "Set if non-executable pages should be scanned");
 
         this->addParam(new BoolParam(PARAM_MINDUMP, false));
@@ -61,6 +70,15 @@ public:
 
         this->addParam(new BoolParam(PARAM_HOOKS, false));
         this->setInfo(PARAM_HOOKS, "Detect hooks and patches");
+
+        EnumParam *triggerParam = new EnumParam(PARAM_TRIGGER, "term_trigger", false);
+        if (triggerParam) {
+            this->addParam(triggerParam);
+            triggerParam->addEnumValue(t_term_trigger::TRIG_TIMEOUT, "on timeout ONLY (no matter detected content)");
+            triggerParam->addEnumValue(t_term_trigger::TRIG_ANY, "if any suspicious indicator detected");
+        }
+
+        this->setInfo(PARAM_TRIGGER, "a trigger causing unpacker to terminate");
 
         //optional: group parameters
         std::string str_group = "output options";
@@ -98,6 +116,10 @@ public:
         EnumParam *myData = dynamic_cast<EnumParam*>(this->getParam(PARAM_DATA));
         if (myData && myData->isSet()) {
             ps.hh_args.pesieve_args.data = (pesieve::t_data_scan_mode) myData->value;
+        }
+        EnumParam *myTrigger = dynamic_cast<EnumParam*>(this->getParam(PARAM_TRIGGER));
+        if (myTrigger && myTrigger->isSet()) {
+            ps.trigger = (t_term_trigger) myTrigger->value;
         }
         BoolParam *myMinidump = dynamic_cast<BoolParam*>(this->getParam(PARAM_MINDUMP));
         if (myMinidump && myMinidump->isSet()) {

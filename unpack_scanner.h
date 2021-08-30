@@ -15,7 +15,7 @@
 class ScanStats {
 public:
     ScanStats()
-        : scanned(0),detected(0)
+        : scanned(0), detected(0)
     {
     }
 
@@ -75,7 +75,6 @@ protected:
     t_unp_params &unp_args;
 
     //results:
-    std::set<DWORD> replaced;
     std::set<DWORD> unkilled_pids;
 
     std::set<DWORD> allTargets;

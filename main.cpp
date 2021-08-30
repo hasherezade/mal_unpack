@@ -18,7 +18,7 @@
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION "0.6"
+#define VERSION "0.6.1"
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
 {
     UnpackParams uParams;
     t_params_struct params = { 0 };
+    params.trigger = t_term_trigger::TRIG_ANY;
     UnpackScanner::args_init(params.hh_args);
     std::stringstream ss;
     if (argc < 2) {
@@ -69,6 +70,11 @@ int main(int argc, char *argv[])
         std::cerr << "[-] Could not set debug privilege" << std::endl;
     }
     uParams.fillStruct(params);
+    params.hh_args.kill_suspicious = true;
+    // if the timeout was chosen as the trigger, don't interfere in the process:
+    if (params.trigger == t_term_trigger::TRIG_TIMEOUT) {
+        params.hh_args.kill_suspicious = false;
+    }
 
     std::cout << "Starting the process: " << params.exe_path << std::endl;
     std::cout << "With commandline: \"" << params.exe_cmd << "\"" << std::endl;
@@ -90,7 +96,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    params.hh_args.kill_suspicious = true;
     params.hh_args.loop_scanning = true;
     params.hh_args.pname = file_name;
     params.hh_args.start_pid = GetProcessId(proc);
@@ -113,7 +118,7 @@ int main(int argc, char *argv[])
             break;
         }
         count++;
-        
+        std::cout << "Scanning..." << std::endl;
         ScanStats stats = scanner.scan();
         
         if (stats.scanned == 0) {
@@ -129,8 +134,10 @@ int main(int argc, char *argv[])
         if (stats.detected > 0) {
             finalStats.detected++;
             is_unpacked = true;
-            ret_code = ERROR_SUCCESS;
-            break;
+            if (params.trigger == t_term_trigger::TRIG_ANY) {
+                std::cout << "Suspicious detected, breaking!" << std::endl;
+                break;
+            }
         }
     } while (params.hh_args.loop_scanning);
 
@@ -139,6 +146,7 @@ int main(int argc, char *argv[])
 
     if (is_unpacked) {
         std::cout << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds; " << count << " attempts." << std::endl;
+        ret_code = ERROR_SUCCESS;
     }
     if (kill_pid(GetProcessId(proc))) {
         std::cout << "[OK] The initial process got killed." << std::endl;

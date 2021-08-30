@@ -35,7 +35,7 @@ bool pesieve_scan(pesieve::t_params args, ScanStats &stats)
     if (report.errors) {
         return false;
     }
-    if (report.implanted || report.replaced) {
+    if (report.implanted_pe || report.replaced) {
         stats.detected++;
         std::cout << "Found potential payload: " << std::dec << args.pid << std::endl;
         return true;
@@ -107,7 +107,6 @@ ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
 #endif
         unp_args.pesieve_args.pid = pid;
         if (pesieve_scan(unp_args.pesieve_args, myStats)) {
-            replaced.insert(pid);
             bool is_killed = false;
             if (unp_args.kill_suspicious) {
                 is_killed = kill_pid(pid);
