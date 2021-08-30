@@ -84,7 +84,7 @@ public:
         EnumParam *impParam = new EnumParam(PARAM_IMP, "imp_rec", false);
         if (impParam) {
             this->addParam(impParam);
-            this->setInfo(PARAM_IMP, "in which mode ImportTable should be revocered");
+            this->setInfo(PARAM_IMP, "in which mode ImportTable should be recovered");
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "A", "try to autodetect the most suitable mode [DEFAULT]");
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "U", "unrase the erased parts of partialy damaged ImportTable");
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD, "R", "rebuild ImportTable from scratch");
