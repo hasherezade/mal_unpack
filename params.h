@@ -95,8 +95,7 @@ public:
         IntParam *myTimeout = dynamic_cast<IntParam*>(this->getParam(PARAM_TIMEOUT));
         if (myTimeout) ps.timeout = myTimeout->value;
 
-        //TODO: it should be an enum parameter
-        IntParam *myData = dynamic_cast<IntParam*>(this->getParam(PARAM_DATA));
+        EnumParam *myData = dynamic_cast<EnumParam*>(this->getParam(PARAM_DATA));
         if (myData && myData->isSet()) {
             ps.hh_args.pesieve_args.data = (pesieve::t_data_scan_mode) myData->value;
         }
