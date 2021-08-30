@@ -1,7 +1,9 @@
 #pragma once
 
-#include  <Windows.h>
+#include <windows.h>
 #include <psapi.h>
+#include <map>
+#include <set>
 
 #define INVALID_PID_VALUE (DWORD)(-1)
 
@@ -14,3 +16,5 @@ DWORD get_parent_pid(DWORD my_pid);
 bool kill_pid(DWORD pid);
 
 bool set_debug_privilege();
+
+size_t map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap);

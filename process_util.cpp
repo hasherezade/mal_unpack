@@ -1,6 +1,8 @@
 #include "process_util.h"
 #include <iostream>
 #include <Psapi.h>
+#include <tlhelp32.h>
+
 #include "pe-sieve\utils\ntddk.h"
 
 HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags)
@@ -184,4 +186,41 @@ bool set_debug_privilege()
     // close token handle
     CloseHandle(hToken);
     return is_ok;
+}
+
+size_t map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap)
+{
+    size_t count = 0;
+    size_t scanned_count = 0;
+    size_t ignored_count = 0;
+
+    HANDLE hProcessSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hProcessSnapShot == INVALID_HANDLE_VALUE) {
+        const DWORD err = GetLastError();
+        std::cerr << "[-] Could not create modules snapshot. Error: " << std::dec << err << std::endl;
+        return 0;
+    }
+
+    PROCESSENTRY32 pe32 = { 0 };
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    if (!Process32First(hProcessSnapShot, &pe32)) {
+        CloseHandle(hProcessSnapShot);
+        std::cerr << "[-] Could not enumerate processes. Error: " << GetLastError() << std::endl;
+        return 0;
+    }
+    do {
+        const DWORD pid = pe32.th32ProcessID;
+        const DWORD parent = pe32.th32ParentProcessID;
+        pids.insert(pid);
+
+        if (parent != INVALID_PID_VALUE) {
+            parentToChildrenMap[parent].insert(pid);
+            count++;
+        }
+    } while (Process32Next(hProcessSnapShot, &pe32));
+
+    //close the handles
+    CloseHandle(hProcessSnapShot);
+    return count;
 }

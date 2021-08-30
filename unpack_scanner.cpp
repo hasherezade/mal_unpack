@@ -5,6 +5,8 @@
 
 #include "process_util.h"
 
+#define WAIT_FOR_PROCESSES 100
+
 void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 {
     unp_args.pesieve_args = { 0 };
@@ -119,35 +121,22 @@ ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
 size_t UnpackScanner::collectTargets()
 {
     const size_t initial_size = allTargets.size();
-
-    DWORD aProcesses[1024], cbNeeded;
-    if (!EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded)) {
-        return 0;
-    }
-    
     std::set<DWORD> mainTargets;
 
-    //calculate how many process identifiers were returned.
-    size_t cProcesses = cbNeeded / sizeof(DWORD);
-    char image_buf[MAX_PATH] = { 0 };
-
-    for (size_t i = 0; i < cProcesses; i++) {
-        if (aProcesses[i] == 0) continue;
-
-        const DWORD pid = aProcesses[i];
-        const DWORD parent = get_parent_pid(pid);
-
-        if (parent != INVALID_PID_VALUE) {\
-            parentToChildrenMap[parent].insert(pid);
-        }
-
+    std::set<DWORD> pids; //all running processes
+    if (!map_processes_parent_to_children(pids, this->parentToChildrenMap)) {
+        std::cerr << "Mapping processes failed!\n";
+    }
+    std::set<DWORD>::iterator itr;
+    for (itr = pids.begin(); itr != pids.end(); ++itr) {
+        const DWORD pid = *itr;
         if (!isTarget(pid)) {
             //it is not the searched process, so skip it
             continue;
         }
         //std::cout << ">>>>> Adding PID : " << std::dec << pid << " to targets list "<< "\n";
-        allTargets.insert(pid);
         mainTargets.insert(pid);
+        allTargets.insert(pid);
     }
 
     //collect children of the target: only for the starting PID
@@ -200,12 +189,12 @@ ScanStats UnpackScanner::_scan()
     this->allTargets.clear();
     this->startingPidTree.clear();
 
+    //populate the list as long as new processes are coming...
     size_t collected = -1;
     do {
         collected = collectTargets();
-        Sleep(100);
-    }
-     while (collected != 0);
+        Sleep(WAIT_FOR_PROCESSES);
+    } while (collected != 0);
 
     return scanProcesses(allTargets);
 }
