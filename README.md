@@ -26,3 +26,7 @@ Use **recursive clone** to get the repo together with submodules:
 ```console
 git clone --recursive https://github.com/hasherezade/mal_unpack.git
 ```
+
+## Builds
+
+Download the latest [release](https://github.com/hasherezade/mal_unpack/releases).
