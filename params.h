@@ -4,6 +4,7 @@
 using namespace paramkit;
 
 #include "unpack_scanner.h"
+#include "util.h"
 
 #define DEFAULT_TIMEOUT 1000
 
@@ -103,6 +104,26 @@ public:
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_MINDUMP, str_group);
         this->addParamToGroup(PARAM_IMP, str_group);
+    }
+
+    void printBanner()
+    {
+        std::stringstream ss;
+        ss << "mal_unpack " << this->versionStr;
+#ifdef _WIN64
+        ss << " (x64)" << "\n";
+#else
+        ss << " (x86)" << "\n";
+#endif
+        ss << "Dynamic malware unpacker\n";
+        ss << "Built on: " << __DATE__;
+
+        paramkit::print_in_color(MAKE_COLOR(WHITE, BLACK), ss.str());
+        std::cout << "\n";
+        DWORD pesieve_ver = PESieve_version;
+        std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
+
+        print_in_color(paramkit::WARNING_COLOR, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n");
     }
 
     void fillStruct(t_params_struct &ps)

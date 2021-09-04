@@ -41,24 +41,9 @@ int main(int argc, char *argv[])
     t_params_struct params = { 0 };
     params.trigger = t_term_trigger::TRIG_ANY;
     UnpackScanner::args_init(params.hh_args);
-    std::stringstream ss;
+    
     if (argc < 2) {
-        ss << "mal_unpack " << VERSION;
-#ifdef _WIN64
-        ss << " (x64)" << "\n";
-#else
-        ss << " (x86)" << "\n";
-#endif
-        ss << "Dynamic malware unpacker\n";
-        ss << "Built on: " << __DATE__;
-
-        paramkit::print_in_color(MAKE_COLOR(WHITE, BLACK), ss.str());
-        std::cout << "\n";
-        DWORD pesieve_ver = PESieve_version;
-        std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
-
-        print_in_color(paramkit::WARNING_COLOR, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n");
-        std::cout << "Args:\n";
+        uParams.printBanner();
         uParams.info();
         system("pause");
         return 0;
