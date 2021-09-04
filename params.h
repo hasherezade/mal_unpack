@@ -48,7 +48,7 @@ public:
         this->setInfo(PARAM_CMD, "Commandline arguments for the input exe");
 
         this->addParam(new IntParam(PARAM_TIMEOUT, true, IntParam::INT_BASE_DEC));
-        this->setInfo(PARAM_TIMEOUT, "Timeout in miliseconds");
+        this->setInfo(PARAM_TIMEOUT, "Timeout in miliseconds (0: infinity)");
 
         this->addParam(new StringParam(PARAM_OUT_DIR, false));
         this->setInfo(PARAM_OUT_DIR, "Set a root directory for the output (default: current directory)");
