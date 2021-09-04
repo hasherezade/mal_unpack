@@ -37,7 +37,7 @@ void save_report(std::string file_name, ScanStats &finalStats)
 
 int main(int argc, char *argv[])
 {
-    UnpackParams uParams;
+    UnpackParams uParams(VERSION);
     t_params_struct params = { 0 };
     params.trigger = t_term_trigger::TRIG_ANY;
     UnpackScanner::args_init(params.hh_args);
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
         std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
 
         print_in_color(paramkit::WARNING_COLOR, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n");
-        std::cout << "Args:\n\n";
+        std::cout << "Args:\n";
         uParams.info();
         system("pause");
         return 0;

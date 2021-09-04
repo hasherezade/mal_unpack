@@ -37,8 +37,8 @@ typedef struct {
 class UnpackParams : public Params
 {
 public:
-    UnpackParams()
-        : Params()
+    UnpackParams(const std::string &version)
+        : Params(version)
     {
         this->addParam(new StringParam(PARAM_EXE, true));
         this->setInfo(PARAM_EXE, "Input exe (to be run)");
@@ -46,8 +46,8 @@ public:
         this->addParam(new StringParam(PARAM_CMD, false));
         this->setInfo(PARAM_CMD, "Commandline arguments for the input exe");
 
-        this->addParam(new IntParam(PARAM_TIMEOUT, true));
-        this->setInfo(PARAM_TIMEOUT, "Timeout: ms");
+        this->addParam(new IntParam(PARAM_TIMEOUT, true, IntParam::INT_BASE_DEC));
+        this->setInfo(PARAM_TIMEOUT, "Timeout in miliseconds");
 
         this->addParam(new StringParam(PARAM_OUT_DIR, false));
         this->setInfo(PARAM_OUT_DIR, "Output directory");
@@ -61,8 +61,6 @@ public:
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_NO_DEP, "if no DEP: scan non-exec if DEP is disabled (or if is .NET)");
             dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_ALWAYS, "always: scan non-executable pages unconditionally");
         }
-
-        
 
         this->addParam(new BoolParam(PARAM_MINDUMP, false));
         this->setInfo(PARAM_MINDUMP, "Create a minidump of the detected process");
