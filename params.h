@@ -50,7 +50,7 @@ public:
         this->setInfo(PARAM_TIMEOUT, "Timeout in miliseconds");
 
         this->addParam(new StringParam(PARAM_OUT_DIR, false));
-        this->setInfo(PARAM_OUT_DIR, "Output directory");
+        this->setInfo(PARAM_OUT_DIR, "Set a root directory for the output (default: current directory)");
 
         EnumParam *dataParam = new EnumParam(PARAM_DATA, "data_scan_mode", false);
         if (dataParam) {
