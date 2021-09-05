@@ -128,44 +128,18 @@ public:
 
     void fillStruct(t_params_struct &ps)
     {
-        StringParam *myExe = dynamic_cast<StringParam*>(this->getParam(PARAM_EXE));
-        if (myExe) {
-            myExe->copyToCStr(ps.exe_path, sizeof(ps.exe_path));
-        }
-        StringParam *myCmd = dynamic_cast<StringParam*>(this->getParam(PARAM_CMD));
-        if (myCmd) {
-            myCmd->copyToCStr(ps.exe_cmd, sizeof(ps.exe_cmd));
-        }
-        StringParam *myDir = dynamic_cast<StringParam*>(this->getParam(PARAM_OUT_DIR));
-        if (myDir) {
-            myDir->copyToCStr(ps.out_dir, sizeof(ps.out_dir));
-        }
-        IntParam *myTimeout = dynamic_cast<IntParam*>(this->getParam(PARAM_TIMEOUT));
-        if (myTimeout) ps.timeout = myTimeout->value;
+        copyCStr<StringParam>(PARAM_EXE, ps.exe_path, sizeof(ps.exe_path));
+        copyCStr<StringParam>(PARAM_CMD, ps.exe_cmd, sizeof(ps.exe_cmd));
+        copyCStr<StringParam>(PARAM_OUT_DIR, ps.out_dir, sizeof(ps.out_dir));
 
-        EnumParam *myData = dynamic_cast<EnumParam*>(this->getParam(PARAM_DATA));
-        if (myData && myData->isSet()) {
-            ps.hh_args.pesieve_args.data = (pesieve::t_data_scan_mode) myData->value;
-        }
-        EnumParam *myTrigger = dynamic_cast<EnumParam*>(this->getParam(PARAM_TRIGGER));
-        if (myTrigger && myTrigger->isSet()) {
-            ps.trigger = (t_term_trigger) myTrigger->value;
-        }
-        BoolParam *myMinidump = dynamic_cast<BoolParam*>(this->getParam(PARAM_MINDUMP));
-        if (myMinidump && myMinidump->isSet()) {
-            ps.hh_args.pesieve_args.minidump = myMinidump->value;
-        }
-        BoolParam *myShellc = dynamic_cast<BoolParam*>(this->getParam(PARAM_SHELLCODE));
-        if (myShellc && myShellc->isSet()) {
-            ps.hh_args.pesieve_args.shellcode = myShellc->value;
-        }
-        BoolParam *myHooks = dynamic_cast<BoolParam*>(this->getParam(PARAM_HOOKS));
-        if (myHooks && myHooks->isSet()) {
-            ps.hh_args.pesieve_args.no_hooks = !(myHooks->value);
-        }
-        EnumParam *myImp = dynamic_cast<EnumParam*>(this->getParam(PARAM_IMP));
-        if (myImp && myImp->isSet()) {
-            ps.hh_args.pesieve_args.imprec_mode = (pesieve::t_imprec_mode)myImp->value;
-        }
+        copyVal<IntParam>(PARAM_TIMEOUT, ps.timeout);
+
+        copyVal<EnumParam>(PARAM_DATA, ps.hh_args.pesieve_args.data);
+        copyVal<EnumParam>(PARAM_TRIGGER, ps.trigger);
+
+        copyVal<BoolParam>(PARAM_MINDUMP, ps.hh_args.pesieve_args.minidump);
+        copyVal<BoolParam>(PARAM_SHELLCODE, ps.hh_args.pesieve_args.shellcode);
+        copyVal<BoolParam>(PARAM_HOOKS, ps.hh_args.pesieve_args.no_hooks);
+        copyVal<BoolParam>(PARAM_IMP, ps.hh_args.pesieve_args.imprec_mode);
     }
 };
