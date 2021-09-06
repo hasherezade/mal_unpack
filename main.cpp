@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
     
     if (argc < 2) {
         uParams.printBanner();
-        uParams.info();
+        uParams.info(false, "", false);
         system("pause");
         return 0;
     }
-    if (!uParams.parse(argc, argv) || !uParams.hasRequiredFilled()) {
+    if (!uParams.parse(argc, argv)) {
         return 0;
     }
     if (!set_debug_privilege()) {
