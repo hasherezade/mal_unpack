@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     
     if (argc < 2) {
         uParams.printBanner();
-        uParams.info(false, "", false);
+        uParams.printBriefInfo();
         system("pause");
         return 0;
     }
