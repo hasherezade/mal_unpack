@@ -139,7 +139,10 @@ public:
 
         copyVal<BoolParam>(PARAM_MINDUMP, ps.hh_args.pesieve_args.minidump);
         copyVal<BoolParam>(PARAM_SHELLCODE, ps.hh_args.pesieve_args.shellcode);
-        copyVal<BoolParam>(PARAM_HOOKS, ps.hh_args.pesieve_args.no_hooks);
         copyVal<BoolParam>(PARAM_IMP, ps.hh_args.pesieve_args.imprec_mode);
+
+        bool hooks = false;
+        copyVal<BoolParam>(PARAM_HOOKS, hooks);
+        ps.hh_args.pesieve_args.no_hooks = hooks ? false : true;
     }
 };
