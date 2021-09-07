@@ -90,17 +90,17 @@ public:
         }
 
         //optional: group parameters
-        std::string str_group = "output options";
+        std::string str_group = "3. output options";
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_OUT_DIR, str_group);
 
-        str_group = "scan options";
+        str_group = "1. scan options";
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_DATA, str_group);
         this->addParamToGroup(PARAM_SHELLCODE, str_group);
         this->addParamToGroup(PARAM_HOOKS, str_group);
 
-        str_group = "dump options";
+        str_group = "2. dump options";
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_MINDUMP, str_group);
         this->addParamToGroup(PARAM_IMP, str_group);
