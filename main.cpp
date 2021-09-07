@@ -18,7 +18,7 @@
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION "0.7"
+#define VERSION "0.8"
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
