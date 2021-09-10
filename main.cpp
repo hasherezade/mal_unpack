@@ -11,6 +11,7 @@
 // basic file operations
 #include <iostream>
 #include <fstream>
+#include <pe_sieve_return_codes.h>
 
 #include "unpack_scanner.h"
 #include "process_util.h"
@@ -51,10 +52,10 @@ int main(int argc, char *argv[])
         uParams.printBanner();
         uParams.printBriefInfo();
         system("pause");
-        return 0;
+        return PESIEVE_INFO;
     }
     if (!uParams.parse(argc, argv)) {
-        return 0;
+        return PESIEVE_INFO;
     }
     if (!set_debug_privilege()) {
         std::cerr << "[-] Could not set debug privilege" << std::endl;
@@ -79,11 +80,12 @@ int main(int argc, char *argv[])
     }
     std::cout << "Root Dir: " << root_dir << "\n";
 
+    t_pesieve_res ret_code = PESIEVE_ERROR;
     const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
     HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
-        return -1;
+        return ret_code;
     }
 
     params.hh_args.pname = file_name;
@@ -95,7 +97,6 @@ int main(int argc, char *argv[])
     DWORD start_tick = GetTickCount();
     size_t count = 0;
 
-    DWORD ret_code = ERROR_INVALID_PARAMETER;
     bool is_unpacked = false;
     UnpackScanner scanner(params.hh_args);
     ScanStats finalStats;
@@ -103,7 +104,7 @@ int main(int argc, char *argv[])
         DWORD curr_time = GetTickCount() - start_tick;
         if ((timeout != -1 && timeout > 0) && curr_time > timeout) {
             std::cout << "Unpack timeout passed!" << std::endl;
-            ret_code = WAIT_TIMEOUT;
+            ret_code = PESIEVE_NOT_DETECTED;
             break;
         }
         count++;
@@ -116,7 +117,7 @@ int main(int argc, char *argv[])
             }
             else {
                 std::cout << "Waiting timeout passed!" << std::endl;
-                ret_code = WAIT_TIMEOUT;
+                ret_code = PESIEVE_NOT_DETECTED;
                 break;
             }
         }
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
 
     if (is_unpacked) {
         std::cout << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds; " << count << " attempts." << std::endl;
-        ret_code = ERROR_SUCCESS;
+        ret_code = PESIEVE_DETECTED;
     }
     if (kill_pid(GetProcessId(proc))) {
         std::cout << "[OK] The initial process got killed." << std::endl;
