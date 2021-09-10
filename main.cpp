@@ -18,7 +18,7 @@
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION "0.8"
+#define VERSION "0.8.1"
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
@@ -35,13 +35,18 @@ void save_report(std::string file_name, ScanStats &finalStats)
     report.close();
 }
 
+void init_defaults(t_params_struct &params)
+{
+    UnpackScanner::args_init(params.hh_args);
+    params.trigger = t_term_trigger::TRIG_ANY;
+}
+
 int main(int argc, char *argv[])
 {
     UnpackParams uParams(VERSION);
     t_params_struct params = { 0 };
-    params.trigger = t_term_trigger::TRIG_ANY;
-    UnpackScanner::args_init(params.hh_args);
-    
+    init_defaults(params);
+
     if (argc < 2) {
         uParams.printBanner();
         uParams.printBriefInfo();
@@ -81,7 +86,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    params.hh_args.loop_scanning = true;
     params.hh_args.pname = file_name;
     params.hh_args.start_pid = GetProcessId(proc);
 
