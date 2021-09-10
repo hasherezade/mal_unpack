@@ -59,6 +59,7 @@ INSTALL( TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT $
 if(MU_BUILD_TESTING)
 	enable_testing()
 
-	# 0) does the application run
-	add_test ( TestRuns ${CMAKE_INSTALL_PREFIX}\\${PROJECT_NAME} )
+	# 0) does the application run?
+	add_test ( TestRuns ${CMAKE_INSTALL_PREFIX}\\${PROJECT_NAME} --help )
+	set_tests_properties(TestRuns PROPERTIES PASS_REGULAR_EXPRESSION "PE-sieve")
 endif()

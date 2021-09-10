@@ -40,7 +40,10 @@ build_script:
 after_build:
   - mkdir %artifactName%
   - cp %APPVEYOR_BUILD_FOLDER%/%APPVEYOR_REPO_COMMIT%/*.* %artifactName%
-  
+
+test_script:
+  - ctest -V
+
 artifacts:
   - path: build\%artifactName%
   
