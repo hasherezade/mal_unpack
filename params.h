@@ -95,20 +95,24 @@ public:
         }
 
         //optional: group parameters
-        std::string str_group = "3. output options";
+        std::string str_group = "1. scanner settings";
         this->addGroup(new ParamGroup(str_group));
-        this->addParamToGroup(PARAM_OUT_DIR, str_group);
+        this->addParamToGroup(PARAM_REFLECTION, str_group);
 
-        str_group = "1. scan options";
+        str_group = "2. scan options";
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_DATA, str_group);
         this->addParamToGroup(PARAM_SHELLCODE, str_group);
         this->addParamToGroup(PARAM_HOOKS, str_group);
 
-        str_group = "2. dump options";
+        str_group = "3. dump options";
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_MINDUMP, str_group);
         this->addParamToGroup(PARAM_IMP, str_group);
+
+        str_group = "4. output options";
+        this->addGroup(new ParamGroup(str_group));
+        this->addParamToGroup(PARAM_OUT_DIR, str_group);
     }
 
     void printBanner()
