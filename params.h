@@ -20,6 +20,7 @@ using namespace paramkit;
 #define PARAM_IMP "imp"
 #define PARAM_TRIGGER "trigger"
 #define PARAM_REFLECTION "refl"
+#define PARAM_DLL_INJ "inject"
 
 typedef enum {
     TRIG_TIMEOUT = 0,
@@ -31,6 +32,7 @@ typedef struct {
     char exe_path[MAX_PATH];
     char exe_cmd[MAX_PATH];
     char out_dir[MAX_PATH];
+    char dll_inj[MAX_PATH];
     DWORD timeout;
     t_term_trigger trigger;
     UnpackScanner::t_unp_params hh_args;
@@ -53,6 +55,9 @@ public:
 
         this->addParam(new StringParam(PARAM_OUT_DIR, false));
         this->setInfo(PARAM_OUT_DIR, "Set a root directory for the output (default: current directory)");
+
+        this->addParam(new StringParam(PARAM_DLL_INJ, false));
+        this->setInfo(PARAM_DLL_INJ, "Inject a DLL into the created process");
 
         //PARAM_REFLECTION
         this->addParam(new BoolParam(PARAM_REFLECTION, false));
@@ -140,6 +145,7 @@ public:
         copyCStr<StringParam>(PARAM_EXE, ps.exe_path, sizeof(ps.exe_path));
         copyCStr<StringParam>(PARAM_CMD, ps.exe_cmd, sizeof(ps.exe_cmd));
         copyCStr<StringParam>(PARAM_OUT_DIR, ps.out_dir, sizeof(ps.out_dir));
+        copyCStr<StringParam>(PARAM_DLL_INJ, ps.dll_inj, sizeof(ps.dll_inj));
 
         copyVal<IntParam>(PARAM_TIMEOUT, ps.timeout);
         copyVal<EnumParam>(PARAM_TRIGGER, ps.trigger);

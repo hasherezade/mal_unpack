@@ -4,13 +4,19 @@
 #include <tlhelp32.h>
 
 #include "pe-sieve\utils\ntddk.h"
+#include "dll_injection.h"
 
-HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags)
+HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags, char* injDll)
 {
     std::string full_cmd = std::string(exe_path) + " " + std::string(cmd);
     STARTUPINFOA si;
     memset(&si, 0, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
+
+    const bool make_suspended = (flags & CREATE_SUSPENDED) ? true : false;
+    if (injDll) {
+        flags = flags | CREATE_SUSPENDED;
+    }
 
     memset(&pi, 0, sizeof(PROCESS_INFORMATION));
     std::cout << "Commandline: " << cmd << std::endl;
@@ -32,14 +38,20 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
 #endif
         return NULL;
     }
+    if (inject_with_loadlibrary(pi.hProcess, injDll)) {
+        std::cout << "Created process with a DLL injected: " << injDll << "\n";
+    }
+    if (!make_suspended && (flags & CREATE_SUSPENDED)) {
+        ResumeThread(pi.hThread);
+    }
     return pi.hProcess;
 }
 
-HANDLE make_new_process(char* targetPath, char* cmdLine, DWORD flags)
+HANDLE make_new_process(char* targetPath, char* cmdLine, DWORD flags, char* injDll)
 {
     //create target process:
     PROCESS_INFORMATION pi;
-    if (!create_new_process(targetPath, cmdLine, pi, flags)) {
+    if (!create_new_process(targetPath, cmdLine, pi, flags, injDll)) {
         return false;
     }
 #ifdef _DEBUG

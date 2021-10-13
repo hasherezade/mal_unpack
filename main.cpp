@@ -19,7 +19,7 @@
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION "0.8.3"
+#define VERSION "0.8.3-a"
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     t_pesieve_res ret_code = PESIEVE_ERROR;
     const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
-    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags);
+    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, params.dll_inj);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
         return ret_code;

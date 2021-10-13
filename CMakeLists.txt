@@ -20,12 +20,14 @@ set (srcs
 	process_util.cpp
 	unpack_scanner.cpp
 	util.cpp
+	dll_injection.cpp
 )
 
 set (hdrs
 	process_util.h
 	unpack_scanner.h
 	util.h
+	dll_injection.h
 	params.h
 )
 
