@@ -9,7 +9,10 @@
 [![Platform Badge](https://img.shields.io/badge/Windows-0078D6?logo=windows)](https://github.com/hasherezade/pe-mal_unpack)
 
 Dynamic unpacker based on [PE-sieve](https://github.com/hasherezade/pe-sieve.git).<br/>
-It deploys a packed malware, waits for it to unpack the payload, dumps the payload, and kills the original process.</b><br/>
+It deploys a packed malware, waits for it to unpack the payload, dumps the payload, and kills the original process.</b>
+
+📖 Read more on [PE-sieve's Wiki](https://github.com/hasherezade/pe-sieve/wiki/1.-FAQ#pe-sieve-vs-malunpack---what-is-the-difference).
+<br/>
 
 ## Usage
 
@@ -18,6 +21,7 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 ```
 
 **WARNING:** This unpacker deploys the original malware. Use it only on a VirtualMachine.
+
 
 ## Clone
 
