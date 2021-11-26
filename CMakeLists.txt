@@ -19,12 +19,14 @@ set (srcs
 	main.cpp
 	process_util.cpp
 	unpack_scanner.cpp
+	driver_comm.cpp
 	util.cpp
 )
 
 set (hdrs
 	process_util.h
 	unpack_scanner.h
+	driver_comm.h
 	util.h
 	params.h
 )
