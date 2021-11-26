@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required ( VERSION 2.8...3.21 )
 project (mal_unpack)
 option(MU_BUILD_TESTING "enable testing for mal_unpack" ON)
 
