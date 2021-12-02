@@ -8,7 +8,7 @@
 
 HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags)
 {
-    static bool is_driver = is_driver_ready();
+    static bool is_driver = driver::is_ready();
 
     //is the CREATE_SUSPENDED flag explicitly requested?
     const bool make_suspended = (flags & CREATE_SUSPENDED) ? true : false;
@@ -40,7 +40,7 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
 #endif
         return NULL;
     }
-    if (is_driver && request_driver_action(DACTION_REGISTER, pi.dwProcessId)) {
+    if (is_driver && driver::request_action(DACTION_REGISTER, pi.dwProcessId)) {
         std::cout << "[*] The process: " << std::dec << pi.dwProcessId << " is watched by the driver"<< "\n";
     }
     if (!make_suspended && (flags & CREATE_SUSPENDED)) {
@@ -100,8 +100,8 @@ DWORD get_parent_pid(DWORD dwPID)
 
 bool kill_pid(DWORD pid)
 {
-    static bool is_driver = is_driver_ready();
-    if (is_driver && request_driver_action(DACTION_KILL, pid)) {
+    static bool is_driver = driver::is_ready();
+    if (is_driver && driver::request_action(DACTION_KILL, pid)) {
         std::cout << "[*] The process: "<< std::dec << pid << " is sent to be terminated by the driver" << "\n";
         return true;
     }
@@ -207,7 +207,7 @@ bool set_debug_privilege()
     return is_ok;
 }
 
-size_t map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap)
+size_t _map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap)
 {
     size_t count = 0;
     size_t scanned_count = 0;

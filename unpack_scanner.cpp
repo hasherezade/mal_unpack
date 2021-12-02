@@ -92,7 +92,7 @@ ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
     return myStats;
 }
 
-size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, OUT std::set<DWORD> &targets)
+size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, IN std::map<DWORD, std::set<DWORD> >& parentToChildrenMap, OUT std::set<DWORD> &targets)
 {
     const size_t startSize = targets.size();
     if (unp_args.pname.length() == 0) {
@@ -109,7 +109,7 @@ size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, OUT std::
     // collect secondary targets: children of all other processes with matching name
     const size_t tree_depth = 100;
     for (size_t i = 0; i < tree_depth; i++) {
-        size_t added_new = collectSecondaryTargets(targets, targets);
+        size_t added_new = collectSecondaryTargets(targets, parentToChildrenMap, targets);
         if (added_new == 0) break;
     }
     return (targets.size() - startSize);
@@ -119,9 +119,9 @@ size_t UnpackScanner::collectTargets()
 {
     const size_t initial_size = allTargets.size();
     std::set<DWORD> mainTargets;
-
+    static std::map<DWORD, std::set<DWORD> > parentToChildrenMap;
     std::set<DWORD> pids; //all running processes
-    if (!map_processes_parent_to_children(pids, this->parentToChildrenMap)) {
+    if (!_map_processes_parent_to_children(pids, parentToChildrenMap)) {
         std::cerr << "Mapping processes failed!\n";
     }
 
@@ -133,7 +133,7 @@ size_t UnpackScanner::collectTargets()
     allChildren.insert(this->unp_args.start_pid);
     const size_t tree_depth = 100;
     for (size_t i = 0; i < tree_depth; i++) {
-        size_t added_new = collectSecondaryTargets(allChildren, allChildren);
+        size_t added_new = collectSecondaryTargets(allChildren, parentToChildrenMap, allChildren);
 #ifdef _DEBUG
         std::cout << "added new: " << added_new << "\n";
 #endif
@@ -143,7 +143,7 @@ size_t UnpackScanner::collectTargets()
 
     //collecting by common name with the starting process:
     std::set<DWORD> byName;
-    size_t added = collectByTheSameName(pids, byName);
+    size_t added = collectByTheSameName(pids, parentToChildrenMap, byName);
     
     size_t targetsBefore = allTargets.size();
     allTargets.insert(byName.begin(), byName.end());
@@ -153,7 +153,7 @@ size_t UnpackScanner::collectTargets()
     return allTargets.size() - initial_size;
 }
 
-size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets, OUT std::set<DWORD> &_secondaryTargets)
+size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets, IN std::map<DWORD, std::set<DWORD> >& parentToChildrenMap, OUT std::set<DWORD> &_secondaryTargets)
 {
     size_t initial_size = _primaryTargets.size();
 

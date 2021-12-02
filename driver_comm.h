@@ -8,6 +8,12 @@ typedef enum {
 	DACTION_KILL = 2
 } driver_action;
 
-bool is_driver_ready();
+namespace driver {
 
-bool request_driver_action(driver_action action, DWORD pid);
+	bool is_ready();
+
+	bool request_action(driver_action action, DWORD pid);
+
+	bool fetch_watched_processes(DWORD out_buffer[], size_t out_size);
+};
+
