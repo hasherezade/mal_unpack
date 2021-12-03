@@ -54,12 +54,7 @@ public:
 
     void printStats();
 
-    size_t killRemaining()
-    {
-        size_t remaining = kill_pids(allTargets);
-        remaining += kill_pids(unkilled_pids);
-        return remaining;
-    }
+    size_t killRemaining();
 
 protected:
     static size_t kill_pids(std::set<DWORD> &pids);

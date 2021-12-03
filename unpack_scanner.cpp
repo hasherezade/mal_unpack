@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "process_util.h"
+#include "driver_comm.h"
 
 #define WAIT_FOR_PROCESSES 100
 
@@ -42,7 +43,6 @@ bool pesieve_scan(pesieve::t_params args, ScanStats &stats)
     }
     return false;
 }
-
 
 
 bool is_searched_process(DWORD processID, const char* searchedName)
@@ -115,8 +115,30 @@ size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, IN std::m
     return (targets.size() - startSize);
 }
 
+size_t UnpackScanner::killRemaining()
+{
+    collectTargets();
+    size_t remaining = kill_pids(allTargets);
+    remaining += kill_pids(unkilled_pids);
+    return remaining;
+}
+
 size_t UnpackScanner::collectTargets()
 {
+    const size_t out_size = 1024;
+    DWORD out_buffer[out_size + 1] = { 0 };
+    bool isOK = driver::fetch_watched_processes(this->unp_args.start_pid, out_buffer, out_size);
+    if (isOK) {
+        const size_t initial_size = allTargets.size();
+        size_t found = 0;
+        for (size_t i = 0; i < out_size; i++) {
+            if (out_buffer[i] == 0) break;
+            allTargets.insert(out_buffer[i]);
+            found++;
+        }
+        return allTargets.size() - initial_size;
+    }
+
     const size_t initial_size = allTargets.size();
     std::set<DWORD> mainTargets;
     static std::map<DWORD, std::set<DWORD> > parentToChildrenMap;
