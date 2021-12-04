@@ -117,6 +117,7 @@ size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, IN std::m
 
 size_t UnpackScanner::killRemaining()
 {
+    kill_pids(allTargets);
     collectTargets();
     size_t remaining = kill_pids(allTargets);
     remaining += kill_pids(unkilled_pids);
@@ -124,6 +125,17 @@ size_t UnpackScanner::killRemaining()
 }
 
 size_t UnpackScanner::collectTargets()
+{
+    //populate the list as long as new processes are coming...
+    size_t collected = -1;
+    do {
+        collected = _collectTargets();
+        Sleep(WAIT_FOR_PROCESSES);
+    } while (collected != 0);
+    return collected;
+}
+
+size_t UnpackScanner::_collectTargets()
 {
     const size_t out_size = 1024;
     DWORD out_buffer[out_size + 1] = { 0 };
@@ -211,13 +223,7 @@ ScanStats UnpackScanner::_scan()
 {
     this->allTargets.clear();
 
-    //populate the list as long as new processes are coming...
-    size_t collected = -1;
-    do {
-        collected = collectTargets();
-        Sleep(WAIT_FOR_PROCESSES);
-    } while (collected != 0);
-
+    collectTargets();
     return scanProcesses(allTargets);
 }
 

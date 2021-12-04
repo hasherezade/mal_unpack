@@ -62,6 +62,7 @@ protected:
     ScanStats _scan();
 
     size_t collectTargets();
+    size_t _collectTargets();
 
     size_t collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets, IN std::map<DWORD, std::set<DWORD> > &_parentToChildrenMap, OUT std::set<DWORD> &_secondaryTargets);
     size_t collectByTheSameName(IN std::set<DWORD> allPids, IN std::map<DWORD, std::set<DWORD> >& _parentToChildrenMap, OUT std::set<DWORD> &targets);
