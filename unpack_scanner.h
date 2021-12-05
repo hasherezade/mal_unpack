@@ -58,6 +58,8 @@ public:
 
     size_t killRemaining();
 
+    size_t deleteDroppedFiles();
+
 protected:
     static size_t kill_pids(std::set<DWORD> &pids);
 

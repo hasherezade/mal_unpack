@@ -5,6 +5,7 @@
 
 #include "process_util.h"
 #include "driver_comm.h"
+#include "file_util.h"
 
 #define WAIT_FOR_PROCESSES 100
 #define MAX_ELEMENTS 1024
@@ -123,6 +124,8 @@ size_t UnpackScanner::killRemaining()
     
     size_t remaining = kill_pids(allTargets);
     remaining += kill_pids(unkilled_pids);
+
+    deleteDroppedFiles();
     return remaining;
 }
 
@@ -139,6 +142,26 @@ size_t UnpackScanner::collectDroppedFiles()
     }
     return allDroppedFiles.size();
 }
+
+size_t UnpackScanner::deleteDroppedFiles()
+{
+    size_t all_files = allDroppedFiles.size();
+    if (all_files == 0) {
+        return 0; //nothing to delete
+    }
+
+    size_t deleted = file_util::delete_dropped_files(allDroppedFiles);
+    size_t remaining = all_files - deleted;
+
+    if (remaining) {
+        std::cerr << "[WARNING] Not all dropped files are deleted!\n";
+    }
+    else {
+        std::cout << "[OK] All dropped files are deleted!\n";
+    }
+    return remaining;
+}
+
 
 size_t UnpackScanner::collectTargets()
 {

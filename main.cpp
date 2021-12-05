@@ -153,5 +153,6 @@ int main(int argc, char *argv[])
     if (remaining > 0) {
         std::cout << "WARNING: " << remaining << " of the related processes are not killed" << std::endl;
     }
+    
     return ret_code;
 }
