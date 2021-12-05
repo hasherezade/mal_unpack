@@ -33,17 +33,41 @@ namespace driver {
 		return 0;
 	}
 
-	void list_buffer(DWORD* out_buffer, size_t out_size)
+	template<typename T>
+	void list_buffer(T* out_buffer, size_t out_count, bool print_hex)
 	{
 		std::cout << "{ ";
-		for (size_t i = 0; i < out_size; i++) {
+		for (size_t i = 0; i < out_count; i++) {
 			if (out_buffer[i] == 0) break;
 			if (i != 0) {
 				std::cout << ", ";
 			}
-			std::cout << std::dec << out_buffer[i];
+			if (print_hex) {
+				std::cout << std::hex << out_buffer[i];
+			}
+			else {
+				std::cout << std::dec << out_buffer[i];
+			}
 		}
 		std::cout << " }\n";
+	}
+
+	template<typename T>
+	bool fetch_watched_elements(DWORD ioctl, DWORD startPID, T out_buffer[], size_t out_count)
+	{
+		if (!out_buffer || !out_count) {
+			return false;
+		}
+		HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+		if (hDevice == INVALID_HANDLE_VALUE) {
+			std::cerr << "Failed to open device" << std::endl;
+			return 1;
+		}
+		size_t out_size = out_count * sizeof(T); // size in bytes
+		DWORD returned = 0;
+		BOOL success = DeviceIoControl(hDevice, ioctl, &startPID, sizeof(startPID), out_buffer, out_size, &returned, nullptr);
+		CloseHandle(hDevice);
+		return success == TRUE ? true : false;
 	}
 };
 
@@ -64,24 +88,26 @@ bool driver::fetch_watched_processes(DWORD startPID, DWORD out_buffer[], size_t 
 	if (!isReady) {
 		return false;
 	}
-	if (!out_buffer || !out_count) {
+	bool isOK = fetch_watched_elements(IOCTL_MUNPACK_COMPANION_LIST_PROCESSES, startPID, out_buffer, out_count);
+	if (isOK) {
+		std::cout << "Processes retrieved by the driver:\n";
+		list_buffer(out_buffer, out_count, false);
+	}
+	return isOK;
+}
+
+bool driver::fetch_watched_files(DWORD startPID, LONGLONG out_buffer[], size_t out_count)
+{
+	static bool isReady = is_ready();
+	if (!isReady) {
 		return false;
 	}
-	DWORD ioctl = IOCTL_MUNPACK_COMPANION_LIST_PROCESSES;
-	HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-	if (hDevice == INVALID_HANDLE_VALUE) {
-		std::cerr << "Failed to open device" << std::endl;
-		return 1;
+	bool isOK = fetch_watched_elements(IOCTL_MUNPACK_COMPANION_LIST_FILES, startPID, out_buffer, out_count);
+	if (isOK) {
+		std::cout << "FileIDs retrieved by the driver:\n";
+		list_buffer(out_buffer, out_count, true);
 	}
-	size_t out_size = out_count * sizeof(out_buffer[0]); // size in bytes
-	DWORD returned = 0;
-	BOOL success = DeviceIoControl(hDevice, ioctl, &startPID, sizeof(startPID), out_buffer, out_size, &returned, nullptr);
-	if (success) {
-		std::cout << "Retrieved by the driver:\n";
-		list_buffer(out_buffer, out_size);
-	}
-	CloseHandle(hDevice);
-	return success == TRUE ? true : false;
+	return isOK;
 }
 
 bool driver::request_action(driver_action action, DWORD pid)

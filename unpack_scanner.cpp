@@ -7,6 +7,7 @@
 #include "driver_comm.h"
 
 #define WAIT_FOR_PROCESSES 100
+#define MAX_ELEMENTS 1024
 
 void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 {
@@ -119,9 +120,24 @@ size_t UnpackScanner::killRemaining()
 {
     kill_pids(allTargets);
     collectTargets();
+    
     size_t remaining = kill_pids(allTargets);
     remaining += kill_pids(unkilled_pids);
     return remaining;
+}
+
+size_t UnpackScanner::collectDroppedFiles()
+{
+    const size_t out_size = MAX_ELEMENTS;
+    LONGLONG out_buffer[out_size + 1] = { 0 };
+    bool isOK = driver::fetch_watched_files(this->unp_args.start_pid, out_buffer, out_size);
+    if (isOK) {
+        for (size_t i = 0; i < out_size; i++) {
+            if (out_buffer[i] == 0) break;
+            allDroppedFiles.insert(out_buffer[i]);
+        }
+    }
+    return allDroppedFiles.size();
 }
 
 size_t UnpackScanner::collectTargets()
@@ -137,7 +153,7 @@ size_t UnpackScanner::collectTargets()
 
 size_t UnpackScanner::_collectTargets()
 {
-    const size_t out_size = 1024;
+    const size_t out_size = MAX_ELEMENTS;
     DWORD out_buffer[out_size + 1] = { 0 };
     bool isOK = driver::fetch_watched_processes(this->unp_args.start_pid, out_buffer, out_size);
     if (isOK) {

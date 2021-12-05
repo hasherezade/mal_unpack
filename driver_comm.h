@@ -15,5 +15,7 @@ namespace driver {
 	bool request_action(driver_action action, DWORD pid);
 
 	bool fetch_watched_processes(DWORD startPID, DWORD out_buffer[], size_t out_count);
+
+	bool fetch_watched_files(DWORD startPID, LONGLONG out_buffer[], size_t out_count);
 };
 

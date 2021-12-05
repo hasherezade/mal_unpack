@@ -54,6 +54,8 @@ public:
 
     void printStats();
 
+    size_t collectDroppedFiles();
+
     size_t killRemaining();
 
 protected:
@@ -63,6 +65,7 @@ protected:
 
     size_t collectTargets();
     size_t _collectTargets();
+
 
     size_t collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets, IN std::map<DWORD, std::set<DWORD> > &_parentToChildrenMap, OUT std::set<DWORD> &_secondaryTargets);
     size_t collectByTheSameName(IN std::set<DWORD> allPids, IN std::map<DWORD, std::set<DWORD> >& _parentToChildrenMap, OUT std::set<DWORD> &targets);
@@ -75,5 +78,7 @@ protected:
     std::set<DWORD> unkilled_pids;
     std::set<DWORD> allTargets;
 
+    //IDs of the dropped files:
+    std::set<ULONGLONG> allDroppedFiles;
 };
 
