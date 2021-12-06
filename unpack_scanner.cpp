@@ -150,6 +150,10 @@ size_t UnpackScanner::deleteDroppedFiles()
     if (all_files == 0) {
         return 0; //nothing to delete
     }
+    
+    std::cerr << "[INFO] Found dropped files:\n";
+    file_util::list_files(allDroppedFiles);
+
     size_t remaining = all_files;
     size_t attempts = 0;
     size_t deleted = 0;
@@ -157,13 +161,16 @@ size_t UnpackScanner::deleteDroppedFiles()
         deleted += file_util::delete_dropped_files(allDroppedFiles);
         remaining = all_files - deleted;
         if (remaining) {
+#ifdef _DEBUG
             std::cerr << "[WARNING] Some dropped files are not deleted, retrying...\n";
+#endif
             Sleep(WAIT_FOR_PROCESSES * attempts);
         }
     }
-    std::cerr << "[INFO] Deleted : " << deleted << " (out of " << all_files << ") dropped files in " << attempts << " attempts\n";
+    std::cerr << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_files << ") dropped files in " << attempts << " attempts\n";
     if (remaining) {
-        std::cerr << "[WARNING] Not all dropped files are deleted!\n";
+        std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
+        file_util::list_files(allDroppedFiles);
     }
     else {
         std::cout << "[OK] All dropped files are deleted!\n";
