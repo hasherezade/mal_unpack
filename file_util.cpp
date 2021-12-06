@@ -45,9 +45,12 @@ size_t file_util::list_files(std::set<ULONGLONG>& filesIds)
 			std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
 			continue;
 		}
+		processed++;
 		std::cout << "File: " << file_name << "\n";
 	}
+	return processed;
 }
+
 
 size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 {
