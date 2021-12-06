@@ -21,12 +21,11 @@ namespace file_util {
 		return NtOpenFile(&RootHandle, FILE_READ_DATA, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
 
-	bool set_to_delete(wchar_t file_name[MAX_NT_PATH])
+	NTSTATUS set_to_delete(wchar_t file_name[MAX_NT_PATH])
 	{
 		HANDLE hFile = NULL;
 		IO_STATUS_BLOCK ioStatusBlock = { 0 };
 		OBJECT_ATTRIBUTES objAttr = { 0 };
-		IO_STATUS_BLOCK Io = { 0 };
 
 		UNICODE_STRING filePathU = { 0 };
 		RtlInitUnicodeString(&filePathU, file_name);
@@ -34,19 +33,19 @@ namespace file_util {
 
 		NTSTATUS status = NtCreateFile(&hFile, SYNCHRONIZE | DELETE, &objAttr, &ioStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_DELETE, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
 		if (status != STATUS_SUCCESS) {
+			if (ioStatusBlock.Information == FILE_DOES_NOT_EXIST) {
+				return STATUS_SUCCESS; // file already deleted
+			}
 			std::cout << "Failed to open the file for deletion:" << std::hex << status << "\n";
-			return false;
+			return status;
 		}
 		FILE_DISPOSITION_INFORMATION disposition = { TRUE };
 		status = NtSetInformationFile(hFile, &ioStatusBlock, &disposition, sizeof(FILE_DISPOSITION_INFORMATION), FileDispositionInformation);
 		NtClose(hFile);
-#ifdef _DEBUG
-		std::cout << "Attempted to set delete disposition: " << std::hex << status << "\n";
-#endif
-		if (status == STATUS_SUCCESS) {
-			return true;
-		}
-		return false;
+//#ifdef _DEBUG
+		std::cout << "Attempted to set delete disposition, status: " << std::hex << status << " IO status:" << ioStatusBlock.Status << "\n";
+//#endif
+		return status;
 	}
 };
 
@@ -92,8 +91,9 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
 	FileDesc.Type = FileIdType;
 
-	const size_t max_len = MAX_NT_PATH;
-	wchar_t file_name[max_len] = { 0 };
+	wchar_t file_name_nt[MAX_NT_PATH] = { 0 };
+	wchar_t file_name_dos[MAX_PATH] = { 0 };
+
 	HANDLE volumeHndl = NULL;
 	if (fetch_volume_handle(L"C", volumeHndl) != STATUS_SUCCESS) {
 		return 0;
@@ -109,28 +109,40 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
 			continue;
 		}
-		BOOL gotName = GetFinalPathNameByHandleW(hFile, file_name, max_len, VOLUME_NAME_NT);
+		BOOL gotNameNt = GetFinalPathNameByHandleW(hFile, file_name_nt, MAX_NT_PATH, VOLUME_NAME_NT);
+		BOOL gotNameDos = GetFinalPathNameByHandleW(hFile, file_name_dos, MAX_PATH, VOLUME_NAME_DOS);
 		NtClose(hFile);
 
-		if (!gotName) {
+		if (!gotNameNt && !gotNameDos) {
 #ifdef _DEBUG
 			std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
 #endif
 			continue;
 		}
+		bool isDeleted = false;
+		if (!isDeleted && gotNameNt) {
+			// file cannot be deleted by its ID, so reopen it again by name...
+			if (set_to_delete(file_name_nt) == STATUS_SUCCESS) {
+				isDeleted = true;
+			}
+		}
+		if (!isDeleted && gotNameDos) {
+			if (DeleteFileW(file_name_dos)) {
+				isDeleted = true;
+			}
+		}
 #ifdef _DEBUG
-		std::wcout << "File: " << file_name << "\n";
+		std::wcout << "File: " << file_name_dos << "\n";
 #endif
-		// file cannot be deleted by its ID, so reopen it again by name...
-		if (set_to_delete(file_name)) {
-
+		
+		if (isDeleted) {
 			filesIds.erase(FileDesc.FileId.QuadPart);
 			processed++;
 		}
 #ifdef _DEBUG
 		else {
 			const DWORD err = GetLastError();
-			std::cout << "Failed to delete dropped file: " << file_name << " Error: " << std::hex << err << "\n";
+			std::cout << "Failed to delete dropped file: " << file_name_dos << " Error: " << std::hex << err << "\n";
 		}
 #endif
 	}
