@@ -17,7 +17,7 @@ NTSTATUS fetch_volume_handle(std::wstring driveLetter, HANDLE& RootHandle)
 	return NtOpenFile(&RootHandle, FILE_READ_DATA, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 }
 
-size_t file_util::delete_dropped_files(std::set<ULONGLONG>& allDroppedFiles)
+size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 {
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -29,21 +29,27 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& allDroppedFiles)
 		return 0;
 	}
 	size_t processed = 0;
-	std::set<ULONGLONG>::iterator itr;
-	for (itr = allDroppedFiles.begin(); itr != allDroppedFiles.end(); ++itr) {
+	std::set<ULONGLONG>::iterator itr = filesIds.begin();
 
+	while (itr != filesIds.end()) {
 		FileDesc.FileId.QuadPart = *itr;
+		++itr;
 
 		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, FILE_GENERIC_READ, FILE_SHARE_READ, NULL, 0);
 		if (!hFile && hFile != INVALID_HANDLE_VALUE) {
 			continue;
 		}
-		if (GetFinalPathNameByHandleA(hFile, file_name, MAX_PATH, VOLUME_NAME_DOS)) {
-			std::cout << "File: " << file_name << "\n";
-		}
+		BOOL gotName = GetFinalPathNameByHandleA(hFile, file_name, MAX_PATH, VOLUME_NAME_DOS);
 		NtClose(hFile);
 
+		if (!gotName) {
+			std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
+			continue;
+		}
+
+		std::cout << "File: " << file_name << "\n";
 		if (DeleteFileA(file_name)) {
+			filesIds.erase(FileDesc.FileId.QuadPart);
 			processed++;
 		}
 		else {

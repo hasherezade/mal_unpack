@@ -9,6 +9,7 @@
 
 #define WAIT_FOR_PROCESSES 100
 #define MAX_ELEMENTS 1024
+#define MAX_ATTEMPTS 10
 
 void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 {
@@ -149,10 +150,18 @@ size_t UnpackScanner::deleteDroppedFiles()
     if (all_files == 0) {
         return 0; //nothing to delete
     }
-
-    size_t deleted = file_util::delete_dropped_files(allDroppedFiles);
-    size_t remaining = all_files - deleted;
-
+    size_t remaining = all_files;
+    size_t attempts = 0;
+    size_t deleted = 0;
+    for (attempts = 0; remaining && (attempts < MAX_ATTEMPTS); attempts++) {
+        deleted += file_util::delete_dropped_files(allDroppedFiles);
+        remaining = all_files - deleted;
+        if (remaining) {
+            std::cerr << "[WARNING] Some dropped files are not deleted, retrying...\n";
+            Sleep(WAIT_FOR_PROCESSES);
+        }
+    }
+    std::cerr << "[INFO] Deleted : " << deleted << " of dropped files in " << attempts << " attempts\n";
     if (remaining) {
         std::cerr << "[WARNING] Not all dropped files are deleted!\n";
     }
