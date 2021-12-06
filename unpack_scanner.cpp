@@ -4,8 +4,11 @@
 #include <string.h>
 
 #include "process_util.h"
+#include "driver_comm.h"
+#include "file_util.h"
 
 #define WAIT_FOR_PROCESSES 100
+#define MAX_ELEMENTS 1024
 
 void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
 {
@@ -42,7 +45,6 @@ bool pesieve_scan(pesieve::t_params args, ScanStats &stats)
     }
     return false;
 }
-
 
 
 bool is_searched_process(DWORD processID, const char* searchedName)
@@ -92,7 +94,7 @@ ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
     return myStats;
 }
 
-size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, OUT std::set<DWORD> &targets)
+size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, IN std::map<DWORD, std::set<DWORD> >& parentToChildrenMap, OUT std::set<DWORD> &targets)
 {
     const size_t startSize = targets.size();
     if (unp_args.pname.length() == 0) {
@@ -109,19 +111,90 @@ size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, OUT std::
     // collect secondary targets: children of all other processes with matching name
     const size_t tree_depth = 100;
     for (size_t i = 0; i < tree_depth; i++) {
-        size_t added_new = collectSecondaryTargets(targets, targets);
+        size_t added_new = collectSecondaryTargets(targets, parentToChildrenMap, targets);
         if (added_new == 0) break;
     }
     return (targets.size() - startSize);
 }
 
+size_t UnpackScanner::killRemaining()
+{
+    kill_pids(allTargets);
+    collectTargets();
+    
+    size_t remaining = kill_pids(allTargets);
+    remaining += kill_pids(unkilled_pids);
+
+    deleteDroppedFiles();
+    return remaining;
+}
+
+size_t UnpackScanner::collectDroppedFiles()
+{
+    const size_t out_size = MAX_ELEMENTS;
+    LONGLONG out_buffer[out_size + 1] = { 0 };
+    bool isOK = driver::fetch_watched_files(this->unp_args.start_pid, out_buffer, out_size);
+    if (isOK) {
+        for (size_t i = 0; i < out_size; i++) {
+            if (out_buffer[i] == 0) break;
+            allDroppedFiles.insert(out_buffer[i]);
+        }
+    }
+    return allDroppedFiles.size();
+}
+
+size_t UnpackScanner::deleteDroppedFiles()
+{
+    size_t all_files = allDroppedFiles.size();
+    if (all_files == 0) {
+        return 0; //nothing to delete
+    }
+
+    size_t deleted = file_util::delete_dropped_files(allDroppedFiles);
+    size_t remaining = all_files - deleted;
+
+    if (remaining) {
+        std::cerr << "[WARNING] Not all dropped files are deleted!\n";
+    }
+    else {
+        std::cout << "[OK] All dropped files are deleted!\n";
+    }
+    return remaining;
+}
+
+
 size_t UnpackScanner::collectTargets()
 {
+    //populate the list as long as new processes are coming...
+    size_t collected = -1;
+    do {
+        collected = _collectTargets();
+        Sleep(WAIT_FOR_PROCESSES);
+    } while (collected != 0);
+    return collected;
+}
+
+size_t UnpackScanner::_collectTargets()
+{
+    const size_t out_size = MAX_ELEMENTS;
+    DWORD out_buffer[out_size + 1] = { 0 };
+    bool isOK = driver::fetch_watched_processes(this->unp_args.start_pid, out_buffer, out_size);
+    if (isOK) {
+        const size_t initial_size = allTargets.size();
+        size_t found = 0;
+        for (size_t i = 0; i < out_size; i++) {
+            if (out_buffer[i] == 0) break;
+            allTargets.insert(out_buffer[i]);
+            found++;
+        }
+        return allTargets.size() - initial_size;
+    }
+
     const size_t initial_size = allTargets.size();
     std::set<DWORD> mainTargets;
-
+    static std::map<DWORD, std::set<DWORD> > parentToChildrenMap;
     std::set<DWORD> pids; //all running processes
-    if (!map_processes_parent_to_children(pids, this->parentToChildrenMap)) {
+    if (!_map_processes_parent_to_children(pids, parentToChildrenMap)) {
         std::cerr << "Mapping processes failed!\n";
     }
 
@@ -133,7 +206,7 @@ size_t UnpackScanner::collectTargets()
     allChildren.insert(this->unp_args.start_pid);
     const size_t tree_depth = 100;
     for (size_t i = 0; i < tree_depth; i++) {
-        size_t added_new = collectSecondaryTargets(allChildren, allChildren);
+        size_t added_new = collectSecondaryTargets(allChildren, parentToChildrenMap, allChildren);
 #ifdef _DEBUG
         std::cout << "added new: " << added_new << "\n";
 #endif
@@ -143,7 +216,7 @@ size_t UnpackScanner::collectTargets()
 
     //collecting by common name with the starting process:
     std::set<DWORD> byName;
-    size_t added = collectByTheSameName(pids, byName);
+    size_t added = collectByTheSameName(pids, parentToChildrenMap, byName);
     
     size_t targetsBefore = allTargets.size();
     allTargets.insert(byName.begin(), byName.end());
@@ -153,7 +226,7 @@ size_t UnpackScanner::collectTargets()
     return allTargets.size() - initial_size;
 }
 
-size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets, OUT std::set<DWORD> &_secondaryTargets)
+size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTargets, IN std::map<DWORD, std::set<DWORD> >& parentToChildrenMap, OUT std::set<DWORD> &_secondaryTargets)
 {
     size_t initial_size = _primaryTargets.size();
 
@@ -189,13 +262,7 @@ ScanStats UnpackScanner::_scan()
 {
     this->allTargets.clear();
 
-    //populate the list as long as new processes are coming...
-    size_t collected = -1;
-    do {
-        collected = collectTargets();
-        Sleep(WAIT_FOR_PROCESSES);
-    } while (collected != 0);
-
+    collectTargets();
     return scanProcesses(allTargets);
 }
 

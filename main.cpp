@@ -19,7 +19,7 @@
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION "0.8.3"
+#define VERSION "0.8.3-h"
 
 void save_report(std::string file_name, ScanStats &finalStats)
 {
@@ -132,12 +132,19 @@ int main(int argc, char *argv[])
     } while (params.hh_args.loop_scanning);
 
     finalStats.scanTime = GetTickCount() - start_tick;
+    
+    //this works only with the companion driver:
+    if (scanner.collectDroppedFiles()) {
+        std::cout << "The process dropped some files!\n";
+    }
+
     save_report(file_name, finalStats);
 
     if (is_unpacked) {
         std::cout << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds; " << count << " attempts." << std::endl;
         ret_code = PESIEVE_DETECTED;
     }
+
     if (kill_pid(GetProcessId(proc))) {
         std::cout << "[OK] The initial process got killed." << std::endl;
     }
@@ -146,5 +153,6 @@ int main(int argc, char *argv[])
     if (remaining > 0) {
         std::cout << "WARNING: " << remaining << " of the related processes are not killed" << std::endl;
     }
+    
     return ret_code;
 }

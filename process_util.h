@@ -18,7 +18,7 @@ bool kill_pid(DWORD pid);
 
 bool set_debug_privilege();
 
-size_t map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap);
+size_t _map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap);
 
 bool get_process_name(IN HANDLE hProcess, OUT LPSTR nameBuf, IN DWORD nameMax);
 

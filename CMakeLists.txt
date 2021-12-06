@@ -19,12 +19,17 @@ set (srcs
 	main.cpp
 	process_util.cpp
 	unpack_scanner.cpp
+	driver_comm.cpp
+	file_util.cpp
 	util.cpp
 )
 
 set (hdrs
 	process_util.h
 	unpack_scanner.h
+	driver_comm.h
+	file_util.h
+	ntddk.h
 	util.h
 	params.h
 )

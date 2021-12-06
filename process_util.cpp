@@ -4,9 +4,17 @@
 #include <tlhelp32.h>
 
 #include "pe-sieve\utils\ntddk.h"
+#include "driver_comm.h"
 
 HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags)
 {
+    static bool is_driver = driver::is_ready();
+
+    //is the CREATE_SUSPENDED flag explicitly requested?
+    const bool make_suspended = (flags & CREATE_SUSPENDED) ? true : false;
+    if (is_driver) {
+        flags = flags | CREATE_SUSPENDED;
+    }
     std::string full_cmd = std::string(exe_path) + " " + std::string(cmd);
     STARTUPINFOA si;
     memset(&si, 0, sizeof(STARTUPINFO));
@@ -31,6 +39,12 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
         std::cerr << "[ERROR] CreateProcess failed, Error = " << GetLastError() << std::endl;
 #endif
         return NULL;
+    }
+    if (is_driver && driver::request_action(DACTION_REGISTER, pi.dwProcessId)) {
+        std::cout << "[*] The process: " << std::dec << pi.dwProcessId << " is watched by the driver"<< "\n";
+    }
+    if (!make_suspended && (flags & CREATE_SUSPENDED)) {
+        ResumeThread(pi.hThread);
     }
     return pi.hProcess;
 }
@@ -86,6 +100,11 @@ DWORD get_parent_pid(DWORD dwPID)
 
 bool kill_pid(DWORD pid)
 {
+    static bool is_driver = driver::is_ready();
+    if (is_driver && driver::request_action(DACTION_KILL, pid)) {
+        std::cout << "[*] The process: "<< std::dec << pid << " is sent to be terminated by the driver" << "\n";
+        return true;
+    }
 #ifdef _DEBUG
     std::cout << "[!] Killing PID: " << std::dec << pid << std::endl;
 #endif
@@ -188,7 +207,7 @@ bool set_debug_privilege()
     return is_ok;
 }
 
-size_t map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap)
+size_t _map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap)
 {
     size_t count = 0;
     size_t scanned_count = 0;
