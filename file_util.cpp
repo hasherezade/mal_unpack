@@ -49,11 +49,13 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 
 		std::cout << "File: " << file_name << "\n";
 		if (DeleteFileA(file_name)) {
+			
 			filesIds.erase(FileDesc.FileId.QuadPart);
 			processed++;
 		}
 		else {
-			std::cout << "Failed to delete dropped file: " << file_name << "\n";
+			const DWORD err = GetLastError();
+			std::cout << "Failed to delete dropped file: " << file_name << " Error: " << std::hex << err << "\n";
 		}
 	}
 	return processed;
