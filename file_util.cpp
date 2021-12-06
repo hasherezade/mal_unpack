@@ -35,7 +35,7 @@ size_t file_util::list_files(std::set<ULONGLONG>& filesIds)
 		FileDesc.FileId.QuadPart = *itr;
 
 		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, FILE_GENERIC_READ, FILE_SHARE_READ, NULL, 0);
-		if (!hFile && hFile != INVALID_HANDLE_VALUE) {
+		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
 			continue;
 		}
 		BOOL gotName = GetFinalPathNameByHandleA(hFile, file_name, MAX_PATH, VOLUME_NAME_DOS);
@@ -68,7 +68,7 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 		++itr;
 
 		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, FILE_GENERIC_READ, FILE_SHARE_READ, NULL, 0);
-		if (!hFile && hFile != INVALID_HANDLE_VALUE) {
+		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
 			continue;
 		}
 		BOOL gotName = GetFinalPathNameByHandleA(hFile, file_name, MAX_PATH, VOLUME_NAME_DOS);
