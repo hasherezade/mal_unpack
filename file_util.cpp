@@ -18,7 +18,7 @@ namespace file_util {
 		RtlInitUnicodeString(&RootDirectory, volume_path.c_str());
 		InitializeObjectAttributes(&Attributes, &RootDirectory, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-		return NtOpenFile(&RootHandle, FILE_READ_DATA, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
+		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_DATA, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
 
 	NTSTATUS set_to_delete(wchar_t file_name[MAX_NT_PATH])
@@ -67,7 +67,7 @@ size_t file_util::list_files(std::set<ULONGLONG>& filesIds)
 	for (itr = filesIds.begin(); itr != filesIds.end(); ++itr) {
 		FileDesc.FileId.QuadPart = *itr;
 
-		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, FILE_GENERIC_READ, FILE_SHARE_READ, NULL, 0);
+		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_DATA, FILE_SHARE_READ, NULL, 0);
 		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
 			continue;
 		}
@@ -105,7 +105,7 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 		FileDesc.FileId.QuadPart = *itr;
 		++itr;
 
-		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, FILE_GENERIC_READ, FILE_SHARE_READ, NULL, 0);
+		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_DATA, FILE_SHARE_READ, NULL, 0);
 		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
 			continue;
 		}
@@ -120,14 +120,14 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 			continue;
 		}
 		bool isDeleted = false;
-		if (!isDeleted && gotNameNt) {
-			// file cannot be deleted by its ID, so reopen it again by name...
-			if (set_to_delete(file_name_nt) == STATUS_SUCCESS) {
+		if (!isDeleted && gotNameDos) {
+			if (DeleteFileW(file_name_dos)) {
 				isDeleted = true;
 			}
 		}
-		if (!isDeleted && gotNameDos) {
-			if (DeleteFileW(file_name_dos)) {
+		if (!isDeleted && gotNameNt) {
+			// file cannot be deleted by its ID, so reopen it again by name...
+			if (set_to_delete(file_name_nt) == STATUS_SUCCESS) {
 				isDeleted = true;
 			}
 		}
