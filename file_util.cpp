@@ -69,7 +69,12 @@ size_t file_util::list_files(std::set<ULONGLONG>& filesIds)
 
 		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_DATA, FILE_SHARE_READ, NULL, 0);
 		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
-			std::cerr << "Failed to open file with ID: " << std::hex << FileDesc.FileId.QuadPart << ", err: " << GetLastError() << "\n";
+			const DWORD err = GetLastError();
+			if (err == ERROR_INVALID_PARAMETER) {
+				std::cerr << "Failed to open file with ID: " << std::hex << FileDesc.FileId.QuadPart << ", file does not exist\n";
+				continue;
+			}
+			std::cerr << "Failed to open file with ID: " << std::hex << FileDesc.FileId.QuadPart << ", err: 0x" << std::hex << GetLastError() << "\n";
 			continue;
 		}
 		BOOL gotName = GetFinalPathNameByHandleA(hFile, file_name, MAX_PATH, VOLUME_NAME_DOS);
@@ -110,7 +115,7 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_DATA, FILE_SHARE_READ, NULL, 0);
 		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
 			const DWORD err = GetLastError();
-			if (err != ERROR_FILE_NOT_FOUND) {
+			if (err != ERROR_INVALID_PARAMETER) { //file does not exist
 				continue;
 			}
 			isDeleted = true;
@@ -150,7 +155,7 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 #ifdef _DEBUG
 		else {
 			const DWORD err = GetLastError();
-			std::cout << "Failed to delete dropped file: " << file_name_dos << " Error: " << std::hex << err << "\n";
+			std::cout << "Failed to delete dropped file: " << file_name_dos << " Error: 0x" << std::hex << err << "\n";
 		}
 #endif
 	}
