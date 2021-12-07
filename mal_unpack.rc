@@ -1,0 +1,21 @@
+#include "version.h"
+#include <windows.h>
+
+#define VER_COMPANYNAME_STR         "Hashereware (hashereware.com)"
+#define VER_FILETYPE                VFT_APP
+#define VER_FILESUBTYPE             VFT2_UNKNOWN
+#define VER_FILEOS                  VOS_NT_WINDOWS32
+#define VER_FILEDESCRIPTION_STR     "MalUnpack - a dynamic malware unpacker (https://github.com/hasherezade/mal_unpack)"
+#define VER_INTERNALNAME_STR        "mal_unpack.exe"
+#define VER_ORIGINALFILENAME_STR    "mal_unpack.exe"
+#define VER_LEGALCOPYRIGHT_STR      "Copyright © 2018-2021 Hasherezade"
+#define VER_PRODUCTNAME_STR         "MalUnpack"
+
+#define VER_FILEFLAGSMASK (VS_FF_DEBUG | VS_FF_PRERELEASE)
+#ifdef DEBUG
+    #define VER_FILEFLAGS (VS_FF_DEBUG)
+#else
+    #define VER_FILEFLAGS (0)
+#endif
+
+#include "common.ver"
