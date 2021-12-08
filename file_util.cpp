@@ -61,7 +61,7 @@ namespace file_util {
 		return status;
 	}
 
-	bool get_file_path(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, DWORD path_type = VOLUME_NAME_DOS)
+	bool get_file_path(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
 		FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -70,9 +70,13 @@ namespace file_util {
 
 		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, 0);
 		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
+			if (GetLastError() == ERROR_INVALID_PARAMETER) {
+				file_exist = false;
+			}
 			return false;
 		}
-		DWORD got_len = GetFinalPathNameByHandleW(hFile, file_name_buf, file_name_len, path_type);
+		file_exist = true;
+		DWORD got_len = GetFinalPathNameByHandleW(hFile, file_name_buf, file_name_len, VOLUME_NAME_DOS);
 		NtClose(hFile);
 		return (got_len != 0) ? true: false;
 	}
@@ -93,17 +97,23 @@ size_t file_util::list_files(std::set<LONGLONG>& filesIds)
 	}
 	size_t processed = 0;
 	std::set<LONGLONG>::iterator itr = filesIds.begin();
-
-	for (itr = filesIds.begin(); itr != filesIds.end(); ++itr) {
+	size_t indx = 0;
+	for (itr = filesIds.begin(); itr != filesIds.end(); ++itr, ++indx) {
 		LONGLONG fileId = *itr;
 
-		const bool gotName = get_file_path(volumeHndl, fileId, file_name, MAX_PATH, VOLUME_NAME_DOS);
+		bool file_exist = true;
+		const bool gotName = get_file_path(volumeHndl, fileId, file_name, MAX_PATH, file_exist);
 		if (!gotName) {
-			std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
+			if (file_exist) {
+				std::cerr << "Failed to retrieve the name of the file with the ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
+			}
+			else {
+				std::cerr << "Failed with the ID: " << std::hex << FileDesc.FileId.QuadPart << " does not exist\n";
+			}
 			continue;
 		}
 		processed++;
-		std::wcout << "File: " << file_name << "\n";
+		std::wcout << "[*] File: " << file_name << "\n";
 	}
 	return processed;
 }
@@ -127,22 +137,32 @@ size_t file_util::delete_dropped_files(std::set<LONGLONG>& filesIds)
 		LONGLONG fileId = *itr;
 
 		bool isDeleted = false;
-		const bool gotName = get_file_path(volumeHndl, fileId, file_name, MAX_PATH, VOLUME_NAME_DOS);
+		bool file_exist = true;
+		const bool gotName = get_file_path(volumeHndl, fileId, file_name, MAX_PATH, file_exist);
 		if (!gotName) {
-			std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
-			continue;
-		}
-		std::wcout << "File: " << file_name << "\n";
-		std::wstring new_name = std::wstring(file_name) + L".unsafe";
-		if (MoveFileExW(file_name, new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
-			std::cout << "file moved!\n";
-			if (DeleteFileW(new_name.c_str())) {
-				isDeleted = true;
-				filesIds.erase(FileDesc.FileId.QuadPart);
-				std::cout << "file deleted!\n";
+			if (file_exist) {
+				std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
+				continue;
 			}
-			processed++;
+			std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "is already deleted\n";
+			isDeleted = true;
 		}
+		if (!isDeleted) {
+			std::wcout << "File: " << file_name;
+			std::wstring new_name = std::wstring(file_name) + L".unsafe";
+			if (MoveFileExW(file_name, new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
+				std::cout << " [MOVED]";
+				if (DeleteFileW(new_name.c_str())) {
+					isDeleted = true;
+					std::cout << " [DELETED]";
+				}
+				processed++;
+			}
+		}
+		if (isDeleted) {
+			filesIds.erase(FileDesc.FileId.QuadPart);
+		}
+		std::wcout << "\n";
 	}
 	return processed;
 }
