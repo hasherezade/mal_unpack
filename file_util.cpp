@@ -18,7 +18,7 @@ namespace file_util {
 		RtlInitUnicodeString(&RootDirectory, volume_path.c_str());
 		InitializeObjectAttributes(&Attributes, &RootDirectory, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_DATA, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
+		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
 
 	NTSTATUS set_to_delete(wchar_t file_name[MAX_NT_PATH])
@@ -31,7 +31,8 @@ namespace file_util {
 		RtlInitUnicodeString(&filePathU, file_name);
 		InitializeObjectAttributes(&objAttr, &filePathU, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-		NTSTATUS status = NtCreateFile(&hFile, SYNCHRONIZE | DELETE, &objAttr, &ioStatusBlock, NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_DELETE, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
+		NTSTATUS status = NtCreateFile(&hFile, SYNCHRONIZE | DELETE, &objAttr, &ioStatusBlock, 
+			NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_DELETE, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
 		if (status != STATUS_SUCCESS) {
 			if (ioStatusBlock.Information == FILE_DOES_NOT_EXIST) {
 				return STATUS_SUCCESS; // file already deleted
@@ -67,7 +68,7 @@ size_t file_util::list_files(std::set<ULONGLONG>& filesIds)
 	for (itr = filesIds.begin(); itr != filesIds.end(); ++itr) {
 		FileDesc.FileId.QuadPart = *itr;
 
-		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_DATA, FILE_SHARE_READ, NULL, 0);
+		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, 0);
 		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
 			const DWORD err = GetLastError();
 			if (err == ERROR_INVALID_PARAMETER) {
@@ -112,7 +113,7 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 		++itr;
 
 		bool isDeleted = false;
-		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_DATA, FILE_SHARE_READ, NULL, 0);
+		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, 0);
 		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
 			const DWORD err = GetLastError();
 			if (err != ERROR_INVALID_PARAMETER) { //file does not exist
@@ -122,8 +123,8 @@ size_t file_util::delete_dropped_files(std::set<ULONGLONG>& filesIds)
 		}
 
 		if (!isDeleted) {
-			BOOL gotNameNt = GetFinalPathNameByHandleW(hFile, file_name_nt, MAX_NT_PATH, VOLUME_NAME_NT);
-			BOOL gotNameDos = GetFinalPathNameByHandleW(hFile, file_name_dos, MAX_PATH, VOLUME_NAME_DOS);
+			const BOOL gotNameNt = GetFinalPathNameByHandleW(hFile, file_name_nt, MAX_NT_PATH, VOLUME_NAME_NT);
+			const BOOL gotNameDos = GetFinalPathNameByHandleW(hFile, file_name_dos, MAX_PATH, VOLUME_NAME_DOS);
 			NtClose(hFile);
 
 			if (!gotNameNt && !gotNameDos) {
