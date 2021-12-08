@@ -81,6 +81,6 @@ protected:
     std::set<DWORD> allTargets;
 
     //IDs of the dropped files:
-    std::set<ULONGLONG> allDroppedFiles;
+    std::set<LONGLONG> allDroppedFiles;
 };
 
