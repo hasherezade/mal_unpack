@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-
 struct ProcessData {
 	unsigned long Id;
 };
@@ -25,14 +24,6 @@ struct ProcessData {
 
 
 namespace driver {
-	DWORD action_to_ioctl(driver_action action)
-	{
-		switch (action) {
-		case DACTION_REGISTER: return IOCTL_MUNPACK_COMPANION_ADD_TO_WATCHED;
-		case DACTION_KILL: return IOCTL_MUNPACK_COMPANION_TERMINATE_WATCHED;
-		}
-		return 0;
-	}
 
 	template<typename T>
 	void list_buffer(T* out_buffer, size_t out_count, bool print_hex)
@@ -56,7 +47,7 @@ namespace driver {
 	template<typename T>
 	bool fetch_watched_elements(DWORD ioctl, DWORD startPID, T out_buffer[], size_t out_count)
 	{
-		if (!out_buffer || !out_count) {
+		if (!out_buffer || !out_count || !ioctl) {
 			return false;
 		}
 		HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
@@ -67,6 +58,27 @@ namespace driver {
 		size_t out_size = out_count * sizeof(T); // size in bytes
 		DWORD returned = 0;
 		BOOL success = DeviceIoControl(hDevice, ioctl, &startPID, sizeof(startPID), out_buffer, out_size, &returned, nullptr);
+		CloseHandle(hDevice);
+		return success == TRUE ? true : false;
+	}
+
+	bool request_action_on_pid(DWORD ioctl, DWORD pid)
+	{
+		if (!ioctl || !pid) {
+			return false;
+		}
+		HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+		if (hDevice == INVALID_HANDLE_VALUE) {
+			std::cerr << "Failed to open device" << std::endl;
+			return 1;
+		}
+
+		ProcessData data = { 0 };
+		data.Id = pid;
+
+		BOOL success = FALSE;
+		DWORD returned = 0;
+		success = DeviceIoControl(hDevice, ioctl, &data, sizeof(data), nullptr, 0, &returned, nullptr);
 		CloseHandle(hDevice);
 		return success == TRUE ? true : false;
 	}
@@ -111,33 +123,13 @@ bool driver::fetch_watched_files(DWORD startPID, LONGLONG out_buffer[], size_t o
 	return isOK;
 }
 
-bool driver::request_action(driver_action action, DWORD pid)
+
+bool driver::watch_pid(DWORD pid)
 {
-	HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-	if (hDevice == INVALID_HANDLE_VALUE) {
-		std::cerr << "Failed to open device" << std::endl;
-		return 1;
-	}
+	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_ADD_TO_WATCHED, pid);
+}
 
-	ProcessData data = { 0 };
-	data.Id = pid;
-
-	BOOL success = FALSE;
-	DWORD ioctl = action_to_ioctl(action);
-	if (ioctl != 0) {
-		DWORD returned = 0;
-		success = DeviceIoControl(hDevice, ioctl, &data, sizeof(data), nullptr, 0, &returned, nullptr);
-		if (success) {
-			std::cout << "[OK] The action completed successfuly" << std::endl;
-		}
-		else {
-			std::cout << "The action failed! " << std::endl;
-		}
-	}
-	else {
-		std::cout << "Invalid action requested! " << std::endl;
-	}
-
-	CloseHandle(hDevice);
-	return success == TRUE ? true : false;
+bool driver::kill_watched_pid(DWORD pid)
+{
+	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_TERMINATE_WATCHED, pid);
 }

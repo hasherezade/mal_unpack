@@ -40,8 +40,16 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
 #endif
         return NULL;
     }
-    if (is_driver && driver::request_action(DACTION_REGISTER, pi.dwProcessId)) {
-        std::cout << "[*] The process: " << std::dec << pi.dwProcessId << " is watched by the driver"<< "\n";
+    if (is_driver) {
+        if (driver::watch_pid(pi.dwProcessId)) {
+            std::cout << "[*] The process: " << std::dec << pi.dwProcessId << " is watched by the driver" << "\n";
+        }
+        else {
+            std::cout << "[!] Could not create a watched process: " << std::dec << pi.dwProcessId << ". Terminating...\n";
+            kill_pid(pi.dwProcessId);
+            return NULL;
+        }
+
     }
     if (!make_suspended && (flags & CREATE_SUSPENDED)) {
         ResumeThread(pi.hThread);
@@ -101,7 +109,7 @@ DWORD get_parent_pid(DWORD dwPID)
 bool kill_pid(DWORD pid)
 {
     static bool is_driver = driver::is_ready();
-    if (is_driver && driver::request_action(DACTION_KILL, pid)) {
+    if (is_driver && driver::kill_watched_pid(pid)) {
         std::cout << "[*] The process: "<< std::dec << pid << " is sent to be terminated by the driver" << "\n";
         return true;
     }
