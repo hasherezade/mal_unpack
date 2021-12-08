@@ -61,7 +61,7 @@ namespace file_util {
 		return status;
 	}
 
-	bool get_file_path(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const size_t file_name_len, DWORD path_type = VOLUME_NAME_DOS)
+	bool get_file_path(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, DWORD path_type = VOLUME_NAME_DOS)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
 		FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -115,9 +115,7 @@ size_t file_util::delete_dropped_files(std::set<LONGLONG>& filesIds)
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
 	FileDesc.Type = FileIdType;
 
-	wchar_t file_name_nt[MAX_NT_PATH] = { 0 };
-	wchar_t file_name_dos[MAX_PATH] = { 0 };
-
+	wchar_t file_name[MAX_PATH] = { 0 };
 	HANDLE volumeHndl = NULL;
 	if (fetch_volume_handle(get_system_drive(), volumeHndl) != STATUS_SUCCESS) {
 		return 0;
@@ -125,58 +123,26 @@ size_t file_util::delete_dropped_files(std::set<LONGLONG>& filesIds)
 	size_t processed = 0;
 	std::set<LONGLONG>::iterator itr = filesIds.begin();
 
-	while (itr != filesIds.end()) {
-		FileDesc.FileId.QuadPart = *itr;
-		++itr;
+	for (itr = filesIds.begin(); itr != filesIds.end(); ++itr) {
+		LONGLONG fileId = *itr;
 
 		bool isDeleted = false;
-		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, 0);
-		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
-			const DWORD err = GetLastError();
-			if (err != ERROR_INVALID_PARAMETER) { //file does not exist
-				continue;
-			}
-			isDeleted = true;
+		const bool gotName = get_file_path(volumeHndl, fileId, file_name, MAX_PATH, VOLUME_NAME_DOS);
+		if (!gotName) {
+			std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
+			continue;
 		}
-
-		if (!isDeleted) {
-			const BOOL gotNameNt = GetFinalPathNameByHandleW(hFile, file_name_nt, MAX_NT_PATH, VOLUME_NAME_NT);
-			const BOOL gotNameDos = GetFinalPathNameByHandleW(hFile, file_name_dos, MAX_PATH, VOLUME_NAME_DOS);
-			NtClose(hFile);
-
-			if (!gotNameNt && !gotNameDos) {
-#ifdef _DEBUG
-				std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
-#endif
-				continue;
+		std::wcout << "File: " << file_name << "\n";
+		std::wstring new_name = std::wstring(file_name) + L".unsafe";
+		if (MoveFileExW(file_name, new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
+			std::cout << "file moved!\n";
+			if (DeleteFileW(new_name.c_str())) {
+				isDeleted = true;
+				filesIds.erase(FileDesc.FileId.QuadPart);
+				std::cout << "file deleted!\n";
 			}
-#ifdef _DEBUG
-			std::wcout << "File: " << file_name_dos << "\n";
-#endif
-			if (!isDeleted && gotNameDos) {
-				if (DeleteFileW(file_name_dos)) {
-					isDeleted = true;
-				}
-			}
-			if (!isDeleted && gotNameNt) {
-				// file cannot be deleted by its ID, so reopen it again by name...
-				if (set_to_delete(file_name_nt) == STATUS_SUCCESS) {
-					isDeleted = true;
-				}
-			}
-		}
-
-		if (isDeleted) {
-			filesIds.erase(FileDesc.FileId.QuadPart);
 			processed++;
 		}
-#ifdef _DEBUG
-		else {
-			const DWORD err = GetLastError();
-			std::cout << "Failed to delete dropped file: " << file_name_dos << " Error: 0x" << std::hex << err << "\n";
-		}
-#endif
 	}
 	return processed;
 }
-
