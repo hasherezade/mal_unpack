@@ -6,7 +6,15 @@ namespace file_util {
 
 	const SIZE_T MAX_NT_PATH = (MAX_PATH * 2);
 
-	NTSTATUS fetch_volume_handle(std::wstring driveLetter, HANDLE& RootHandle)
+	char get_system_drive()
+	{
+		char buf[MAX_PATH] = { 0 };
+		GetWindowsDirectoryA(buf, MAX_PATH);
+		const char drive_letter = buf[0];
+		return drive_letter;
+	}
+
+	NTSTATUS fetch_volume_handle(char driveLetter, HANDLE& RootHandle)
 	{
 		RootHandle = NULL;
 
@@ -14,8 +22,12 @@ namespace file_util {
 		OBJECT_ATTRIBUTES Attributes = { 0 };
 		IO_STATUS_BLOCK Io = { 0 };
 
-		std::wstring volume_path = L"\\??\\" + driveLetter + L":\\";
-		RtlInitUnicodeString(&RootDirectory, volume_path.c_str());
+		WCHAR volume_path[] = L"\\??\\A:\\";
+		wchar_t* drive_letter_ptr = wcsstr(volume_path, L"A");
+		if (drive_letter_ptr) {
+			memcpy(drive_letter_ptr, &driveLetter, sizeof(driveLetter));
+		}
+		RtlInitUnicodeString(&RootDirectory, volume_path);
 		InitializeObjectAttributes(&Attributes, &RootDirectory, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
 		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
@@ -76,7 +88,7 @@ size_t file_util::list_files(std::set<LONGLONG>& filesIds)
 
 	wchar_t file_name[MAX_PATH] = { 0 };
 	HANDLE volumeHndl = NULL;
-	if (fetch_volume_handle(L"C", volumeHndl) != STATUS_SUCCESS) {
+	if (fetch_volume_handle(get_system_drive(), volumeHndl) != STATUS_SUCCESS) {
 		return 0;
 	}
 	size_t processed = 0;
@@ -107,7 +119,7 @@ size_t file_util::delete_dropped_files(std::set<LONGLONG>& filesIds)
 	wchar_t file_name_dos[MAX_PATH] = { 0 };
 
 	HANDLE volumeHndl = NULL;
-	if (fetch_volume_handle(L"C", volumeHndl) != STATUS_SUCCESS) {
+	if (fetch_volume_handle(get_system_drive(), volumeHndl) != STATUS_SUCCESS) {
 		return 0;
 	}
 	size_t processed = 0;
