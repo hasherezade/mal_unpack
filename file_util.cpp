@@ -84,7 +84,7 @@ namespace file_util {
 };
 
 
-size_t file_util::list_files(std::set<LONGLONG>& filesIds)
+size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::wstring>& names)
 {
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -107,20 +107,17 @@ size_t file_util::list_files(std::set<LONGLONG>& filesIds)
 			if (file_exist) {
 				std::cerr << "Failed to retrieve the name of the file with the ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
 			}
-			else {
-				std::cerr << "Failed with the ID: " << std::hex << FileDesc.FileId.QuadPart << " does not exist\n";
-			}
 			continue;
 		}
 		processed++;
-		std::wcout << "[*] File: " << file_name << "\n";
+		names.insert(file_name);
 	}
 	return processed;
 }
 
-
-size_t file_util::delete_dropped_files(std::set<LONGLONG>& filesIds)
+size_t file_util::delete_dropped_files(std::set<std::wstring>& names)
 {
+	std::wstring suffix = L".unsafe";
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
 	FileDesc.Type = FileIdType;
@@ -131,36 +128,26 @@ size_t file_util::delete_dropped_files(std::set<LONGLONG>& filesIds)
 		return 0;
 	}
 	size_t processed = 0;
-	std::set<LONGLONG>::iterator itr = filesIds.begin();
+	std::set<std::wstring>::iterator itr = names.begin();
 
-	for (itr = filesIds.begin(); itr != filesIds.end(); ++itr) {
-		LONGLONG fileId = *itr;
-
+	for (itr = names.begin(); itr != names.end(); ++itr) {
+		std::set<std::wstring>::iterator found_name = itr;
+		std::wstring file_name = *itr;
 		bool isDeleted = false;
-		bool file_exist = true;
-		const bool gotName = get_file_path(volumeHndl, fileId, file_name, MAX_PATH, file_exist);
-		if (!gotName) {
-			if (file_exist) {
-				std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
-				continue;
-			}
-			std::cerr << "Failed to retrieve the name of the file with ID: " << std::hex << FileDesc.FileId.QuadPart << "is already deleted\n";
-			isDeleted = true;
+
+		std::wcout << "File: " << file_name;
+
+		const std::wstring new_name = std::wstring(file_name) + suffix;
+		if (MoveFileExW(file_name.c_str(), new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
+			std::cout << " [MOVED]";
 		}
-		if (!isDeleted) {
-			std::wcout << "File: " << file_name;
-			std::wstring new_name = std::wstring(file_name) + L".unsafe";
-			if (MoveFileExW(file_name, new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
-				std::cout << " [MOVED]";
-				if (DeleteFileW(new_name.c_str())) {
-					isDeleted = true;
-					std::cout << " [DELETED]";
-				}
-				processed++;
-			}
+		if (DeleteFileW(new_name.c_str())) {
+			isDeleted = true;
+			std::cout << " [DELETED]";
 		}
 		if (isDeleted) {
-			filesIds.erase(FileDesc.FileId.QuadPart);
+			names.erase(file_name);
+			processed++;
 		}
 		std::wcout << "\n";
 	}
