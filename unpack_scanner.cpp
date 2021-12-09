@@ -163,14 +163,15 @@ size_t UnpackScanner::deleteDroppedFiles()
     std::set<std::wstring> names;
     file_util::file_ids_to_names(allDroppedFiles, names);
     print_file_names(names);
+    const size_t all_names = names.size();
 
-    size_t remaining = all_files;
+    size_t remaining = all_names;
     size_t attempts = 0;
     size_t deleted = 0;
     std::cerr << "[INFO] Trying to delete...\n";
     for (attempts = 0; remaining && (attempts < MAX_ATTEMPTS); attempts++) {
         deleted += file_util::delete_dropped_files(names);
-        remaining = all_files - deleted;
+        remaining = all_names - deleted;
         if (remaining) {
 #ifdef _DEBUG
             std::cerr << "[WARNING] Some dropped files are not deleted, retrying...\n";
@@ -178,7 +179,7 @@ size_t UnpackScanner::deleteDroppedFiles()
             Sleep(WAIT_FOR_PROCESSES * attempts);
         }
     }
-    std::cerr << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_files << ") dropped files in " << attempts << " attempts\n";
+    std::cerr << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_names << ") dropped files in " << attempts << " attempts\n";
     if (remaining) {
         std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
         print_file_names(names);
