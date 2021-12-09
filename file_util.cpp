@@ -33,34 +33,6 @@ namespace file_util {
 		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
 
-	NTSTATUS set_to_delete(wchar_t file_name[MAX_NT_PATH])
-	{
-		HANDLE hFile = NULL;
-		IO_STATUS_BLOCK ioStatusBlock = { 0 };
-		OBJECT_ATTRIBUTES objAttr = { 0 };
-
-		UNICODE_STRING filePathU = { 0 };
-		RtlInitUnicodeString(&filePathU, file_name);
-		InitializeObjectAttributes(&objAttr, &filePathU, OBJ_CASE_INSENSITIVE, NULL, NULL);
-
-		NTSTATUS status = NtCreateFile(&hFile, SYNCHRONIZE | DELETE, &objAttr, &ioStatusBlock, 
-			NULL, FILE_ATTRIBUTE_NORMAL, FILE_SHARE_DELETE, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT, NULL, 0);
-		if (status != STATUS_SUCCESS) {
-			if (ioStatusBlock.Information == FILE_DOES_NOT_EXIST) {
-				return STATUS_SUCCESS; // file already deleted
-			}
-			std::cout << "Failed to open the file for deletion:" << std::hex << status << "\n";
-			return status;
-		}
-		FILE_DISPOSITION_INFORMATION disposition = { TRUE };
-		status = NtSetInformationFile(hFile, &ioStatusBlock, &disposition, sizeof(FILE_DISPOSITION_INFORMATION), FileDispositionInformation);
-		NtClose(hFile);
-//#ifdef _DEBUG
-		std::cout << "Attempted to set delete disposition, status: " << std::hex << status << " IO status:" << ioStatusBlock.Status << "\n";
-//#endif
-		return status;
-	}
-
 	bool get_file_path(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
