@@ -33,7 +33,7 @@ namespace file_util {
 		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
 
-	bool get_file_path(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist)
+	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
 		FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -74,7 +74,7 @@ size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::
 		LONGLONG fileId = *itr;
 
 		bool file_exist = true;
-		const bool gotName = get_file_path(volumeHndl, fileId, file_name, MAX_PATH, file_exist);
+		const bool gotName = get_file_path_by_id(volumeHndl, fileId, file_name, MAX_PATH, file_exist);
 		if (!gotName) {
 			if (file_exist) {
 				std::cerr << "Failed to retrieve the name of the file with the ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
