@@ -53,7 +53,7 @@ namespace driver {
 		HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 		if (hDevice == INVALID_HANDLE_VALUE) {
 			std::cerr << "Failed to open device" << std::endl;
-			return 1;
+			return false;
 		}
 		size_t out_size = out_count * sizeof(T); // size in bytes
 		DWORD returned = 0;
@@ -70,7 +70,7 @@ namespace driver {
 		HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 		if (hDevice == INVALID_HANDLE_VALUE) {
 			std::cerr << "Failed to open device" << std::endl;
-			return 1;
+			return false;
 		}
 
 		ProcessData data = { 0 };
