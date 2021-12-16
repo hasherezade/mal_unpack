@@ -102,9 +102,9 @@ size_t file_util::delete_dropped_files(std::set<std::wstring>& names)
 	size_t processed = 0;
 	std::set<std::wstring>::iterator itr = names.begin();
 
-	for (itr = names.begin(); itr != names.end(); ++itr) {
-		std::set<std::wstring>::iterator found_name = itr;
-		std::wstring file_name = *itr;
+	for (itr = names.begin(); itr != names.end(); ) {
+
+		const std::wstring file_name = *itr;
 		bool isDeleted = false;
 		bool isMoved = false;
 		
@@ -115,17 +115,21 @@ size_t file_util::delete_dropped_files(std::set<std::wstring>& names)
 		if (DeleteFileW(new_name.c_str())) {
 			isDeleted = true;
 		}
-		if (isDeleted) {
-			names.erase(file_name);
-			processed++;
-		}
 		if (isDeleted || isMoved) {
 			std::wcout << "File: " << file_name;
 			if (isMoved) std::cout << " [MOVED]";
 			if (isDeleted) std::cout << " [DELETED]";
 			std::wcout << "\n";
 		}
-		
+		//erase the name from the list:
+		if (isDeleted) {
+			std::set<std::wstring>::iterator curr_itr = itr;
+			++itr;
+			names.erase(curr_itr);
+			processed++;
+			continue;
+		}
+		++itr;
 	}
 	return processed;
 }
