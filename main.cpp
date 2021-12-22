@@ -67,7 +67,13 @@ int main(int argc, char *argv[])
     if (params.trigger == t_term_trigger::TRIG_TIMEOUT) {
         params.hh_args.kill_suspicious = false;
     }
-
+    // if scanning of inaccessible pages was requested, auto-enable reflection mode:
+    if (params.hh_args.pesieve_args.data == pesieve::PE_DATA_SCAN_INACCESSIBLE || params.hh_args.pesieve_args.data == pesieve::PE_DATA_SCAN_INACCESSIBLE_ONLY) {
+        if (!params.hh_args.pesieve_args.make_reflection) {
+            params.hh_args.pesieve_args.make_reflection = true;
+            print_in_color(RED, "[WARNING] Scanning of inaccessible pages requested: auto-enabled reflection mode!\n");
+        }
+    }
     std::cout << "Starting the process: " << params.exe_path << std::endl;
     std::cout << "With commandline: \"" << params.exe_cmd << "\"" << std::endl;
 
