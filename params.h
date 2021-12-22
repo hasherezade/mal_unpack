@@ -36,6 +36,35 @@ typedef struct {
     UnpackScanner::t_unp_params hh_args;
 } t_params_struct;
 
+
+std::string translate_data_mode(const pesieve::t_data_scan_mode &mode)
+{
+    switch (mode) {
+    case pesieve::PE_DATA_NO_SCAN:
+        return "none: do not scan non-executable pages";
+    case pesieve::PE_DATA_SCAN_DOTNET:
+        return ".NET: scan non-executable in .NET applications";
+    case pesieve::PE_DATA_SCAN_NO_DEP:
+        return "if no DEP: scan non-exec if DEP is disabled (or if is .NET)";
+    case pesieve::PE_DATA_SCAN_ALWAYS:
+        return "always: scan non-executable pages unconditionally";
+    case pesieve::PE_DATA_SCAN_INACCESSIBLE:
+        return "include inaccessible: scan non-executable pages unconditionally;\n\t    in reflection mode (/refl): scan also inaccessible pages";
+    case pesieve::PE_DATA_SCAN_INACCESSIBLE_ONLY:
+        return "scan inaccessible pages, but exclude other non-executable;\n\t    works in reflection mode (/refl) only";
+    }
+    return "undefined";
+}
+
+bool addDataMode(EnumParam *dataParam, pesieve::t_data_scan_mode mode)
+{
+    if (!dataParam) {
+        return false;
+    }
+    dataParam->addEnumValue(mode, translate_data_mode(mode));
+    return true;
+}
+
 class UnpackParams : public Params
 {
 public:
@@ -62,10 +91,12 @@ public:
         if (dataParam) {
             this->addParam(dataParam);
             this->setInfo(PARAM_DATA, "Set if non-executable pages should be scanned");
-            dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_NO_SCAN, "none: do not scan non-executable pages");
-            dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_DOTNET, ".NET: scan non-executable in .NET applications [DEFAULT]");
-            dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_NO_DEP, "if no DEP: scan non-exec if DEP is disabled (or if is .NET)");
-            dataParam->addEnumValue(pesieve::t_data_scan_mode::PE_DATA_SCAN_ALWAYS, "always: scan non-executable pages unconditionally");
+            addDataMode(dataParam, pesieve::t_data_scan_mode::PE_DATA_NO_SCAN);
+            addDataMode(dataParam, pesieve::t_data_scan_mode::PE_DATA_SCAN_DOTNET);
+            addDataMode(dataParam, pesieve::t_data_scan_mode::PE_DATA_SCAN_NO_DEP);
+            addDataMode(dataParam, pesieve::t_data_scan_mode::PE_DATA_SCAN_ALWAYS);
+            addDataMode(dataParam, pesieve::t_data_scan_mode::PE_DATA_SCAN_INACCESSIBLE);
+            addDataMode(dataParam, pesieve::t_data_scan_mode::PE_DATA_SCAN_INACCESSIBLE_ONLY);
         }
 
         this->addParam(new BoolParam(PARAM_MINDUMP, false));
