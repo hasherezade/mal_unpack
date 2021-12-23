@@ -60,17 +60,17 @@ std::string translate_imprec_mode(const pesieve::t_imprec_mode imprec_mode)
 {
     switch (imprec_mode) {
     case pesieve::PE_IMPREC_NONE:
-        return "none: do not recover imports (default)";
+        return "none: do not recover imports";
     case pesieve::PE_IMPREC_AUTO:
         return "try to autodetect the most suitable mode";
     case pesieve::PE_IMPREC_UNERASE:
         return "unerase the erased parts of the partialy damaged ImportTable";
     case pesieve::PE_IMPREC_REBUILD0:
-        return "build the ImportTable from scratch, basing on the found IATs:\n\t        use only terminated blocks (restrictive mode)";
+        return "build the ImportTable from scratch, basing on the found IATs:\n\t         use only terminated blocks (restrictive mode)";
     case pesieve::PE_IMPREC_REBUILD1:
-        return "build the ImportTable from scratch, basing on the found IATs:\n\t        use terminated blocks, or blocks with more than 1 thunk";
+        return "build the ImportTable from scratch, basing on the found IATs:\n\t         use terminated blocks, or blocks with more than 1 thunk";
     case pesieve::PE_IMPREC_REBUILD2:
-        return "build the ImportTable from scratch, basing on the found IATs:\n\t        use terminated blocks: use all found blocks (aggressive mode)";
+        return "build the ImportTable from scratch, basing on the found IATs:\n\t         use all found blocks (aggressive mode)";
     }
     return "undefined";
 }
@@ -139,8 +139,8 @@ public:
         if (impParam) {
             this->addParam(impParam);
             this->setInfo(PARAM_IMP, "in which mode ImportTable should be recovered");
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "A", "try to autodetect the most suitable mode [DEFAULT]");
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "U", "unrase the erased parts of partialy damaged ImportTable");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "A", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_AUTO) + " [DEFAULT]");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "U", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_UNERASE));
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD0, "R0", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD0));
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD1, "R1", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD1));
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2, "R2", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2));
