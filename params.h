@@ -188,7 +188,7 @@ protected:
         copyVal<BoolParam>(PARAM_REFLECTION, ps.make_reflection);
         copyVal<BoolParam>(PARAM_MINDUMP, ps.minidump);
         copyVal<BoolParam>(PARAM_SHELLCODE, ps.shellcode);
-        copyVal<BoolParam>(PARAM_IMP, ps.imprec_mode);
+        copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
         copyVal<EnumParam>(PARAM_DATA, ps.data);
     }
 
