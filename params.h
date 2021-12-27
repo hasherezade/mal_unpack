@@ -139,6 +139,7 @@ public:
         if (impParam) {
             this->addParam(impParam);
             this->setInfo(PARAM_IMP, "in which mode ImportTable should be recovered");
+            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_NONE, "N", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_NONE));
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "A", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_AUTO) + " [DEFAULT]");
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "U", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_UNERASE));
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD0, "R0", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD0));
