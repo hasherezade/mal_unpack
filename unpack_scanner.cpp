@@ -166,7 +166,7 @@ size_t UnpackScanner::deleteDroppedFiles()
     const size_t all_names = names.size();
 
     size_t remaining = all_names;
-    size_t attempts = 0;
+    DWORD attempts = 0;
     size_t deleted = 0;
     std::cerr << "[INFO] Trying to delete...\n";
     for (attempts = 0; remaining && (attempts < MAX_ATTEMPTS); attempts++) {
