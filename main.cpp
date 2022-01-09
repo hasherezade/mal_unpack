@@ -101,14 +101,14 @@ int main(int argc, char *argv[])
     std::string out_dir = make_dir_name(root_dir, time(NULL));
     set_output_dir(params.hh_args.pesieve_args, out_dir.c_str());
 
-    DWORD start_tick = GetTickCount();
+    ULONGLONG start_tick = GetTickCount64();
     size_t count = 0;
 
     bool is_unpacked = false;
     UnpackScanner scanner(params.hh_args);
     ScanStats finalStats;
     do {
-        DWORD curr_time = GetTickCount() - start_tick;
+        ULONGLONG curr_time = GetTickCount64() - start_tick;
         if ((timeout != -1 && timeout > 0) && curr_time > timeout) {
             std::cout << "Unpack timeout passed!" << std::endl;
             ret_code = PESIEVE_NOT_DETECTED;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
         }
     } while (params.hh_args.loop_scanning);
 
-    finalStats.scanTime = GetTickCount() - start_tick;
+    finalStats.scanTime = GetTickCount64() - start_tick;
     
     //this works only with the companion driver:
     if (scanner.collectDroppedFiles()) {

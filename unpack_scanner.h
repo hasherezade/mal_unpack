@@ -21,7 +21,7 @@ public:
 
     void printStats();
 
-    DWORD scanTime;
+    ULONGLONG scanTime;
     size_t scanned;
     size_t detected;
 };
@@ -46,13 +46,11 @@ public:
 
     ScanStats scan()
     {
-        DWORD start_tick = GetTickCount();
+        ULONGLONG start_tick = GetTickCount64();
         ScanStats stats = this->_scan();
-        stats.scanTime = GetTickCount() - start_tick;
+        stats.scanTime = GetTickCount64() - start_tick;
         return stats;
     }
-
-    void printStats();
 
     size_t collectDroppedFiles();
 
