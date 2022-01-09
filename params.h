@@ -17,6 +17,7 @@ using namespace paramkit;
 #define PARAM_MINDUMP "minidmp"
 #define PARAM_SHELLCODE "shellc"
 #define PARAM_HOOKS "hooks"
+#define PARAM_CACHE "cache"
 #define PARAM_IMP "imp"
 #define PARAM_TRIGGER "trigger"
 #define PARAM_REFLECTION "refl"
@@ -106,6 +107,10 @@ public:
         this->addParam(new BoolParam(PARAM_REFLECTION, false));
         this->setInfo(PARAM_REFLECTION, "Make a process reflection before scan.", "\t   This allows i.e. to force-read inaccessible pages.");
 
+        //PARAM_CACHE
+        this->addParam(new BoolParam(PARAM_CACHE, false));
+        this->setInfo(PARAM_CACHE, "Use modules caching.", "\t   This can speed up the scan (on the cost of memory consumption).");
+
         EnumParam *dataParam = new EnumParam(PARAM_DATA, "data_scan_mode", false);
         if (dataParam) {
             this->addParam(dataParam);
@@ -151,6 +156,7 @@ public:
         std::string str_group = "1. scanner settings";
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_REFLECTION, str_group);
+        this->addParamToGroup(PARAM_CACHE, str_group);
 
         str_group = "2. scan options";
         this->addGroup(new ParamGroup(str_group));
@@ -212,6 +218,7 @@ protected:
         copyVal<BoolParam>(PARAM_SHELLCODE, ps.shellcode);
         copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
         copyVal<EnumParam>(PARAM_DATA, ps.data);
+        copyVal<BoolParam>(PARAM_CACHE, ps.use_cache);
     }
 
 };
