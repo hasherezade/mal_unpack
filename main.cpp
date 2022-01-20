@@ -41,9 +41,12 @@ void init_defaults(t_params_struct &params)
 {
     UnpackScanner::args_init(params.hh_args);
     params.trigger = t_term_trigger::TRIG_ANY;
+#ifdef _DEFAULT_CACHE
+    params.hh_args.pesieve_args.use_cache = true;
+#endif
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     UnpackParams uParams(VERSION);
     t_params_struct params = { 0 };
@@ -62,6 +65,12 @@ int main(int argc, char *argv[])
         std::cerr << "[-] Could not set debug privilege" << std::endl;
     }
     uParams.fillStruct(params);
+    if (params.hh_args.pesieve_args.use_cache) {
+        std::cerr << "[*] Cache is Enabled!" << std::endl;
+    }
+    else {
+        std::cerr << "[*] Cache is Disabled!" << std::endl;
+    }
     params.hh_args.kill_suspicious = true;
     // if the timeout was chosen as the trigger, don't interfere in the process:
     if (params.trigger == t_term_trigger::TRIG_TIMEOUT) {
