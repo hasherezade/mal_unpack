@@ -1,6 +1,8 @@
 # mal_unpack
 
 [![Build status](https://ci.appveyor.com/api/projects/status/3cqqlah6unfhasik?svg=true)](https://ci.appveyor.com/project/hasherezade/mal-unpack)
+[![Last Commit](https://img.shields.io/github/last-commit/hasherezade/mal_unpack/master)](https://github.com/hasherezade/mal_unpack/commits)
+
 [![GitHub release](https://img.shields.io/github/release/hasherezade/mal_unpack.svg)](https://github.com/hasherezade/mal_unpack/releases)
 [![Github All Releases](https://img.shields.io/github/downloads/hasherezade/mal_unpack/total.svg)](https://github.com/hasherezade/mal_unpack/releases)
 [![Github Latest Release](https://img.shields.io/github/downloads/hasherezade/mal_unpack/latest/total.svg)](https://github.com/hasherezade/mal_unpack/releases)
