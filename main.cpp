@@ -41,9 +41,7 @@ void init_defaults(t_params_struct &params)
 {
     UnpackScanner::args_init(params.hh_args);
     params.trigger = t_term_trigger::TRIG_ANY;
-#ifdef _DEFAULT_CACHE
     params.hh_args.pesieve_args.use_cache = true;
-#endif
 }
 
 int main(int argc, char* argv[])

@@ -101,15 +101,20 @@ public:
         this->setInfo(PARAM_TIMEOUT, "Timeout in miliseconds (0: infinity)");
 
         this->addParam(new StringParam(PARAM_OUT_DIR, false));
-        this->setInfo(PARAM_OUT_DIR, "Set a root directory for the output (default: current directory)");
+        this->setInfo(PARAM_OUT_DIR, "Set a root directory for the output (DEFAULT: current directory)");
 
         //PARAM_REFLECTION
         this->addParam(new BoolParam(PARAM_REFLECTION, false));
         this->setInfo(PARAM_REFLECTION, "Make a process reflection before scan.", "\t   This allows i.e. to force-read inaccessible pages.");
 
         //PARAM_CACHE
-        this->addParam(new BoolParam(PARAM_CACHE, false));
-        this->setInfo(PARAM_CACHE, "Use modules caching.", "\t   This can speed up the scan (on the cost of memory consumption).");
+        EnumParam* cacheParam = new EnumParam(PARAM_CACHE, "is_enabled", false);
+        if (cacheParam) {
+            this->addParam(cacheParam);
+            this->setInfo(PARAM_CACHE, "Use modules caching.", "\t   This can speed up the scan (on the cost of memory consumption).\n");
+            cacheParam->addEnumValue(0, "D", "disabled");
+            cacheParam->addEnumValue(1, "E", "enabled [DEFAULT]");
+        }
 
         EnumParam *dataParam = new EnumParam(PARAM_DATA, "data_scan_mode", false);
         if (dataParam) {
@@ -218,7 +223,7 @@ protected:
         copyVal<BoolParam>(PARAM_SHELLCODE, ps.shellcode);
         copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
         copyVal<EnumParam>(PARAM_DATA, ps.data);
-        copyVal<BoolParam>(PARAM_CACHE, ps.use_cache);
+        copyVal<EnumParam>(PARAM_CACHE, ps.use_cache);
     }
 
 };
