@@ -256,7 +256,7 @@ size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTarget
     for (itr = _primaryTargets.begin(); itr != _primaryTargets.end(); itr++) {
         DWORD pid = *itr;
 #ifdef _DEBUG
-        std::cout << "Searching children of: " << pid << " [" << get_process_name_str(pid) << "]\n";
+        std::wcout << "Searching children of: " << pid << " [" << get_process_module_path(pid) << "]\n";
 #endif
         std::map<DWORD, std::set<DWORD> >::iterator child_itr = parentToChildrenMap.find(pid);
         if (child_itr == parentToChildrenMap.end()) {
@@ -273,7 +273,7 @@ size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTarget
         std::set<DWORD>::iterator itr;
         for (itr = childrenList.begin(); itr != childrenList.end(); itr++) {
             DWORD child_pid = *itr;
-            std::cout << "Child: " << child_pid << " [" << get_process_name_str(child_pid) << "]\n";
+            std::wcout << "Child: " << child_pid << " [" << get_process_module_path(child_pid) << "]\n";
         }
 #endif
     }
