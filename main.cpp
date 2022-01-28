@@ -49,16 +49,27 @@ void init_defaults(t_params_struct &params)
 
 ULONGLONG get_watched_file_id(const t_params_struct& params)
 {
+    bool is_diffrent = false;
     ULONGLONG file_id = FILE_INVALID_FILE_ID;
     if (strnlen(params.img_path, MAX_PATH) > 0
         && strncmp(params.img_path, params.exe_path, MAX_PATH) != 0)
     {
-        std::cout << "Watch respawns from the IMG: " << params.img_path << "\n";
         file_id = file_util::get_file_id(params.img_path);
+        is_diffrent = true;
     }
     else {
-        std::cout << "Watch respawns from main EXE file: " << params.exe_path << "\n";
         file_id = file_util::get_file_id(params.exe_path);
+        is_diffrent = false;
+    }
+    if (file_id == FILE_INVALID_FILE_ID) {
+        std::cout << "[-] Respawn watching disabled. The file supplied to watch does not exit!\n";
+        return FILE_INVALID_FILE_ID;
+    }
+    if (is_diffrent) {
+        std::cout << "[*] Watch respawns from the IMG: " << params.img_path << "\n";
+    }
+    else {
+        std::cout << "[*] Watch respawns from main EXE file: " << params.exe_path << "\n";
     }
     return file_id;
 }
@@ -83,10 +94,10 @@ int main(int argc, char* argv[])
     }
     uParams.fillStruct(params);
     if (params.hh_args.pesieve_args.use_cache) {
-        std::cerr << "[*] Cache is Enabled!" << std::endl;
+        std::cout << "[*] Cache is Enabled!" << std::endl;
     }
     else {
-        std::cerr << "[*] Cache is Disabled!" << std::endl;
+        std::cout << "[*] Cache is Disabled!" << std::endl;
     }
     params.hh_args.kill_suspicious = true;
     // if the timeout was chosen as the trigger, don't interfere in the process:
