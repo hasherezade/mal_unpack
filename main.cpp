@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 
     t_pesieve_res ret_code = PESIEVE_ERROR;
     const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
-    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags);
+    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, params.img_path);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
         return ret_code;

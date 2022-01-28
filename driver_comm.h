@@ -6,7 +6,7 @@ namespace driver {
 
 	bool is_ready();
 
-	bool watch_pid(DWORD pid);
+	bool watch_pid(DWORD pid, ULONGLONG fileId);
 
 	bool kill_watched_pid(DWORD pid);
 

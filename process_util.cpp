@@ -5,8 +5,9 @@
 
 #include "pe-sieve\utils\ntddk.h"
 #include "driver_comm.h"
+#include "file_util.h"
 
-HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags)
+HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags, IN OPTIONAL LPSTR img_path)
 {
     static bool is_driver = driver::is_ready();
 
@@ -14,6 +15,11 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
     const bool make_suspended = (flags & CREATE_SUSPENDED) ? true : false;
     if (is_driver) {
         flags = flags | CREATE_SUSPENDED;
+    }
+    ULONGLONG file_id = FILE_INVALID_FILE_ID;
+    if (img_path) {
+        std::cout << "Watch img: " << img_path << "\n";
+        file_id = file_util::get_file_id(img_path);
     }
     std::string full_cmd = std::string(exe_path) + " " + std::string(cmd);
     STARTUPINFOA si;
@@ -41,7 +47,7 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
         return NULL;
     }
     if (is_driver) {
-        if (driver::watch_pid(pi.dwProcessId)) {
+        if (driver::watch_pid(pi.dwProcessId, file_id)) {
             std::cout << "[*] The process: " << std::dec << pi.dwProcessId << " is watched by the driver" << "\n";
         }
         else {
@@ -57,12 +63,12 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
     return pi.hProcess;
 }
 
-HANDLE make_new_process(char* targetPath, char* cmdLine, DWORD flags)
+HANDLE make_new_process(IN char* targetPath, IN char* cmdLine, IN DWORD flags, IN OPTIONAL LPSTR img_file)
 {
     //create target process:
     PROCESS_INFORMATION pi;
-    if (!create_new_process(targetPath, cmdLine, pi, flags)) {
-        return false;
+    if (!create_new_process(targetPath, cmdLine, pi, flags, img_file)) {
+        return NULL;
     }
 #ifdef _DEBUG
     std::cout << "PID: " << std::dec << pi.dwProcessId << std::endl;

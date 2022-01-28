@@ -53,8 +53,52 @@ namespace file_util {
 		return (got_len != 0) ? true: false;
 	}
 
+	NTSTATUS FetchFileId(HANDLE hFile, LONGLONG& FileId)
+	{
+		FileId = FILE_INVALID_FILE_ID;
+
+		if (!hFile) {
+			return STATUS_INVALID_PARAMETER;
+		}
+
+		NTSTATUS status = STATUS_UNSUCCESSFUL;
+		__try
+		{
+			IO_STATUS_BLOCK ioStatusBlock;
+			FILE_INTERNAL_INFORMATION fileIdInfo;
+			status = ZwQueryInformationFile(
+				hFile,
+				&ioStatusBlock,
+				&fileIdInfo,
+				sizeof(fileIdInfo),
+				FileInternalInformation
+			);
+			if (NT_SUCCESS(status)) {
+				FileId = fileIdInfo.IndexNumber.QuadPart;
+			}
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			status = STATUS_UNSUCCESSFUL;
+		}
+		return status;
+	}
 };
 
+ULONGLONG file_util::get_file_id(LPSTR img_path)
+{
+	wchar_t file_name[MAX_PATH] = { 0 };
+	HANDLE file = CreateFileA(img_path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+
+	LONGLONG FileId = FILE_INVALID_FILE_ID;
+	NTSTATUS status = FetchFileId(file, FileId);
+	CloseHandle(file);
+
+	if (NT_SUCCESS(status)) {
+		return FileId;
+	}
+	return FILE_INVALID_FILE_ID;
+}
 
 size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::wstring>& names)
 {
