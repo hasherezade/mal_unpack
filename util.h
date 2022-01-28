@@ -13,4 +13,4 @@ std::string make_dir_name(std::string baseDir, time_t timestamp);
 
 bool set_output_dir(pesieve::t_params &args, const char *new_dir);
 
-char* get_file_name(char *full_path);
+const char* get_file_name(const char* full_path);

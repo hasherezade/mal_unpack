@@ -22,7 +22,8 @@ void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
     unp_args.pesieve_args.data = pesieve::PE_DATA_SCAN_DOTNET;
 
     unp_args.loop_scanning = true;
-    unp_args.pname = "";
+    unp_args.module_path = L"";
+    unp_args.is_main_module = true;
 }
 
 //---
@@ -44,27 +45,6 @@ bool pesieve_scan(pesieve::t_params args, ScanStats &stats)
         std::cout << "Found suspicious: " << std::dec << args.pid << std::endl;
         return true;
     }
-    return false;
-}
-
-
-bool is_searched_process(DWORD processID, const char* searchedName)
-{
-    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
-    if (hProcess == NULL) return false;
-
-    CHAR szProcessName[MAX_PATH];
-    if (get_process_name(hProcess, szProcessName, MAX_PATH)) {
-
-        if (_stricmp(szProcessName, searchedName) == 0) {
-#ifdef _DEBUG
-            printf("%s  (PID: %u)\n", szProcessName, processID);
-#endif
-            CloseHandle(hProcess);
-            return true;
-        }
-    }
-    CloseHandle(hProcess);
     return false;
 }
 
@@ -98,15 +78,28 @@ ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
 size_t UnpackScanner::collectByTheSameName(IN std::set<DWORD> allPids, IN std::map<DWORD, std::set<DWORD> >& parentToChildrenMap, OUT std::set<DWORD> &targets)
 {
     const size_t startSize = targets.size();
-    if (unp_args.pname.length() == 0) {
+    if (unp_args.module_path.length() == 0) {
         // the name is undefined, skip
         return 0;
     }
+    
     std::set<DWORD>::iterator itr;
     for (itr = allPids.begin(); itr != allPids.end(); ++itr) {
         const DWORD pid = *itr;
-        if (is_searched_process(pid, unp_args.pname.c_str())) {
-            targets.insert(pid);
+        if (unp_args.is_main_module) {
+            //std::wcout << "Searching by name: " << unp_args.module_path << "\n";
+            const std::wstring process_name = get_process_module_path(pid);
+            if (is_wanted_module(process_name.c_str(), unp_args.module_path.c_str())) {
+                //std::wcout << "process_name:      " << process_name << "\n";
+                //std::cout << "Match: " << pid << "\n";
+                targets.insert(pid);
+            }
+        }
+        else {
+            //std::wcout << "Searching module in process: " << unp_args.module_path << "\n";
+            if (is_module_in_process(pid, unp_args.module_path.c_str())) {
+                targets.insert(pid);
+            }
         }
     }
     // collect secondary targets: children of all other processes with matching name
@@ -130,7 +123,7 @@ size_t UnpackScanner::killRemaining()
     return remaining;
 }
 
-size_t UnpackScanner::collectDroppedFiles()
+size_t UnpackScanner::collectDroppedFiles(ULONGLONG skipId)
 {
     const size_t out_size = MAX_ELEMENTS;
     LONGLONG out_buffer[out_size + 1] = { 0 };
@@ -138,6 +131,7 @@ size_t UnpackScanner::collectDroppedFiles()
     if (isOK) {
         for (size_t i = 0; i < out_size; i++) {
             if (out_buffer[i] == 0) break;
+            if (out_buffer[i] == skipId) continue;
             allDroppedFiles.insert(out_buffer[i]);
         }
     }

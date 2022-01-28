@@ -38,7 +38,7 @@ bool set_output_dir(pesieve::t_params &args, const char *new_dir)
     return true;
 }
 
-char* get_file_name(char *full_path)
+const char* get_file_name(const char *full_path)
 {
     if (!full_path) return nullptr;
 

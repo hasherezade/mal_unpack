@@ -9,6 +9,7 @@ using namespace paramkit;
 #define DEFAULT_TIMEOUT 1000
 
 #define PARAM_EXE "exe"
+#define PARAM_IMG "img"
 #define PARAM_CMD "cmd"
 #define PARAM_TIMEOUT "timeout"
 #define PARAM_OUT_DIR "dir"
@@ -32,6 +33,7 @@ typedef struct {
     char exe_path[MAX_PATH];
     char exe_cmd[MAX_PATH];
     char out_dir[MAX_PATH];
+    char img_path[MAX_PATH];
     DWORD timeout;
     t_term_trigger trigger;
     UnpackScanner::t_unp_params hh_args;
@@ -93,6 +95,10 @@ public:
     {
         this->addParam(new StringParam(PARAM_EXE, true));
         this->setInfo(PARAM_EXE, "Input exe (to be run)");
+
+        this->addParam(new StringParam(PARAM_IMG, false));
+        this->setInfo(PARAM_IMG, "Path to the image from which the malware was run (may be a DLL or EXE).\n\t   DEFAULT: same as /exe", 
+            "\t   This allows to follow processes respawned from the given image.");
 
         this->addParam(new StringParam(PARAM_CMD, false));
         this->setInfo(PARAM_CMD, "Commandline arguments for the input exe");
@@ -197,6 +203,7 @@ public:
     void fillStruct(t_params_struct &ps)
     {
         copyCStr<StringParam>(PARAM_EXE, ps.exe_path, sizeof(ps.exe_path));
+        copyCStr<StringParam>(PARAM_IMG, ps.img_path, sizeof(ps.img_path));
         copyCStr<StringParam>(PARAM_CMD, ps.exe_cmd, sizeof(ps.exe_cmd));
         copyCStr<StringParam>(PARAM_OUT_DIR, ps.out_dir, sizeof(ps.out_dir));
 

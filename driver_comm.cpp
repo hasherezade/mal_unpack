@@ -3,7 +3,12 @@
 #include <iostream>
 
 struct ProcessData {
-	unsigned long Id;
+	DWORD Id;
+};
+
+struct ProcessDataEx {
+	DWORD Id;
+	LONGLONG fileId;
 };
 
 #define DRIVER_PATH  L"\\\\.\\MalUnpackCompanion"
@@ -124,9 +129,26 @@ bool driver::fetch_watched_files(DWORD startPID, LONGLONG out_buffer[], size_t o
 }
 
 
-bool driver::watch_pid(DWORD pid)
+bool driver::watch_pid(DWORD pid, ULONGLONG fileId)
 {
-	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_ADD_TO_WATCHED, pid);
+	if (!pid) {
+		return false;
+	}
+	HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+	if (hDevice == INVALID_HANDLE_VALUE) {
+		std::cerr << "Failed to open device" << std::endl;
+		return false;
+	}
+
+	ProcessDataEx data = { 0 };
+	data.Id = pid;
+	data.fileId = fileId;
+
+	BOOL success = FALSE;
+	DWORD returned = 0;
+	success = DeviceIoControl(hDevice, IOCTL_MUNPACK_COMPANION_ADD_TO_WATCHED, &data, sizeof(data), nullptr, 0, &returned, nullptr);
+	CloseHandle(hDevice);
+	return success == TRUE ? true : false;
 }
 
 bool driver::kill_watched_pid(DWORD pid)

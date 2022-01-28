@@ -17,6 +17,7 @@
 #include "process_util.h"
 #include "util.h"
 #include "version.h"
+#include "file_util.h"
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
@@ -46,6 +47,30 @@ void init_defaults(t_params_struct &params)
 #endif
 }
 
+bool get_watched_file_id(const t_params_struct& params, ULONGLONG &file_id)
+{
+    bool is_diffrent = false;
+    file_id = FILE_INVALID_FILE_ID;
+
+    if (strnlen(params.img_path, MAX_PATH) > 0
+        && strncmp(params.img_path, params.exe_path, MAX_PATH) != 0)
+    {
+        file_id = file_util::get_file_id(params.img_path);
+        is_diffrent = true;
+    }
+    if (file_id == FILE_INVALID_FILE_ID) {
+        file_id = file_util::get_file_id(params.exe_path);
+        is_diffrent = false;
+    }
+    if (is_diffrent) {
+        std::cout << "[*] Watch respawns from the IMG: " << params.img_path << "\n";
+    }
+    else {
+        std::cout << "[*] Watch respawns from main EXE file: " << params.exe_path << "\n";
+    }
+    return is_diffrent;
+}
+
 int main(int argc, char* argv[])
 {
     UnpackParams uParams(VERSION);
@@ -66,10 +91,10 @@ int main(int argc, char* argv[])
     }
     uParams.fillStruct(params);
     if (params.hh_args.pesieve_args.use_cache) {
-        std::cerr << "[*] Cache is Enabled!" << std::endl;
+        std::cout << "[*] Cache is Enabled!" << std::endl;
     }
     else {
-        std::cerr << "[*] Cache is Disabled!" << std::endl;
+        std::cout << "[*] Cache is Disabled!" << std::endl;
     }
     params.hh_args.kill_suspicious = true;
     // if the timeout was chosen as the trigger, don't interfere in the process:
@@ -86,7 +111,7 @@ int main(int argc, char* argv[])
     std::cout << "Starting the process: " << params.exe_path << std::endl;
     std::cout << "With commandline: \"" << params.exe_cmd << "\"" << std::endl;
 
-    char* file_name = get_file_name(params.exe_path);
+    const char* file_name = get_file_name(params.exe_path);
     std::cout << "Exe name: " << file_name << std::endl;
 
     DWORD timeout = params.timeout;
@@ -98,13 +123,17 @@ int main(int argc, char* argv[])
 
     t_pesieve_res ret_code = PESIEVE_ERROR;
     const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
-    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags);
+
+    ULONGLONG file_id;
+    bool is_img_diff = get_watched_file_id(params, file_id);
+    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, file_id);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
         return ret_code;
     }
-
-    params.hh_args.pname = file_name;
+    params.hh_args.is_main_module = is_img_diff ? false : true;
+    params.hh_args.module_path = (is_img_diff) ? file_util::get_file_path(params.img_path) : file_util::get_file_path(params.exe_path);
+    std::wcout << "Module Path retrieved: " << params.hh_args.module_path << "\n";
     params.hh_args.start_pid = GetProcessId(proc);
 
     std::string out_dir = make_dir_name(root_dir, time(NULL));
@@ -150,7 +179,7 @@ int main(int argc, char* argv[])
     finalStats.scanTime = GetTickCount64() - start_tick;
     
     //this works only with the companion driver:
-    if (scanner.collectDroppedFiles()) {
+    if (scanner.collectDroppedFiles(file_id)) {
         std::cout << "The process dropped some files!\n";
     }
 
