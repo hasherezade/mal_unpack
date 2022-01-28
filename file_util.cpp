@@ -85,13 +85,39 @@ namespace file_util {
 	}
 };
 
+
+std::wstring file_util::get_file_path(const char* file_name)
+{
+	wchar_t full_path[MAX_PATH] = { 0 };
+
+	HANDLE hFile = CreateFileA(file_name, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	DWORD got_len = GetFinalPathNameByHandleW(hFile, full_path, MAX_PATH, VOLUME_NAME_DOS);
+	CloseHandle(hFile);
+
+	if (!got_len) {
+		return L"";
+	}
+	
+	wchar_t* prefix = L"\\\\?\\";
+	size_t prefix_len = wcslen(prefix);
+
+	if (got_len < prefix_len) {
+		return full_path;
+	}
+	if (wcsncmp(prefix, full_path, prefix_len) == 0) {
+		// skip the prefix
+		return full_path + prefix_len;
+	}
+	return full_path;
+}
+
 ULONGLONG file_util::get_file_id(const char* img_path)
 {
-	wchar_t file_name[MAX_PATH] = { 0 };
 	HANDLE file = CreateFileA(img_path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 
 	LONGLONG FileId = FILE_INVALID_FILE_ID;
 	NTSTATUS status = FetchFileId(file, FileId);
+
 	CloseHandle(file);
 
 	if (NT_SUCCESS(status)) {

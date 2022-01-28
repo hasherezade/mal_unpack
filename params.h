@@ -97,7 +97,7 @@ public:
         this->setInfo(PARAM_EXE, "Input exe (to be run)");
 
         this->addParam(new StringParam(PARAM_IMG, false));
-        this->setInfo(PARAM_IMG, "Path to the image from which the malware was run (may be a DLL or EXE). DEFAULT: same as /exe", 
+        this->setInfo(PARAM_IMG, "Path to the image from which the malware was run (may be a DLL or EXE).\n\t   DEFAULT: same as /exe", 
             "\t   This allows to follow processes respawned from the given image.");
 
         this->addParam(new StringParam(PARAM_CMD, false));

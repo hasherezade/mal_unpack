@@ -20,6 +20,8 @@ bool set_debug_privilege();
 
 size_t _map_processes_parent_to_children(std::set<DWORD> &pids, std::map<DWORD, std::set<DWORD> > &parentToChildrenMap);
 
-bool get_process_name(IN HANDLE hProcess, OUT LPSTR nameBuf, IN DWORD nameMax);
+std::wstring get_process_module_path(DWORD processID);
 
-std::string get_process_name_str(DWORD processID);
+bool is_module_in_process(DWORD pid, const wchar_t* dll_path);
+
+bool is_wanted_module(const wchar_t* curr_name, const wchar_t* wanted_name);

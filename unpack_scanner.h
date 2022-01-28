@@ -31,7 +31,8 @@ class UnpackScanner
 public:
     typedef struct {
         DWORD start_pid; // PID of the initial process
-        std::string pname;
+        std::wstring module_path; // module from which the malware was run
+        bool is_main_module; // is the malware a main module of the scanned process
         bool loop_scanning;
         bool kill_suspicious;
         pesieve::t_params pesieve_args; //PE-sieve parameters

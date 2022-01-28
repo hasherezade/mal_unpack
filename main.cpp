@@ -47,23 +47,20 @@ void init_defaults(t_params_struct &params)
 #endif
 }
 
-ULONGLONG get_watched_file_id(const t_params_struct& params)
+bool get_watched_file_id(const t_params_struct& params, ULONGLONG &file_id)
 {
     bool is_diffrent = false;
-    ULONGLONG file_id = FILE_INVALID_FILE_ID;
+    file_id = FILE_INVALID_FILE_ID;
+
     if (strnlen(params.img_path, MAX_PATH) > 0
         && strncmp(params.img_path, params.exe_path, MAX_PATH) != 0)
     {
         file_id = file_util::get_file_id(params.img_path);
         is_diffrent = true;
     }
-    else {
+    if (file_id == FILE_INVALID_FILE_ID) {
         file_id = file_util::get_file_id(params.exe_path);
         is_diffrent = false;
-    }
-    if (file_id == FILE_INVALID_FILE_ID) {
-        std::cout << "[-] Respawn watching disabled. The file supplied to watch does not exit!\n";
-        return FILE_INVALID_FILE_ID;
     }
     if (is_diffrent) {
         std::cout << "[*] Watch respawns from the IMG: " << params.img_path << "\n";
@@ -71,7 +68,7 @@ ULONGLONG get_watched_file_id(const t_params_struct& params)
     else {
         std::cout << "[*] Watch respawns from main EXE file: " << params.exe_path << "\n";
     }
-    return file_id;
+    return is_diffrent;
 }
 
 int main(int argc, char* argv[])
@@ -127,14 +124,16 @@ int main(int argc, char* argv[])
     t_pesieve_res ret_code = PESIEVE_ERROR;
     const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
 
-    ULONGLONG file_id = get_watched_file_id(params);
+    ULONGLONG file_id;
+    bool is_img_diff = get_watched_file_id(params, file_id);
     HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, file_id);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
         return ret_code;
     }
-
-    params.hh_args.pname = file_name;
+    params.hh_args.is_main_module = is_img_diff ? false : true;
+    params.hh_args.module_path = (is_img_diff) ? file_util::get_file_path(params.img_path) : file_util::get_file_path(params.exe_path);
+    std::wcout << "Module Path retrieved: " << params.hh_args.module_path << "\n";
     params.hh_args.start_pid = GetProcessId(proc);
 
     std::string out_dir = make_dir_name(root_dir, time(NULL));
