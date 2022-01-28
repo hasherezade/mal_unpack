@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
     std::cout << "Starting the process: " << params.exe_path << std::endl;
     std::cout << "With commandline: \"" << params.exe_cmd << "\"" << std::endl;
 
-    char* file_name = get_file_name(params.exe_path);
+    const char* file_name = get_file_name(params.exe_path);
     std::cout << "Exe name: " << file_name << std::endl;
 
     DWORD timeout = params.timeout;
