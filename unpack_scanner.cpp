@@ -130,7 +130,7 @@ size_t UnpackScanner::killRemaining()
     return remaining;
 }
 
-size_t UnpackScanner::collectDroppedFiles()
+size_t UnpackScanner::collectDroppedFiles(ULONGLONG skipId)
 {
     const size_t out_size = MAX_ELEMENTS;
     LONGLONG out_buffer[out_size + 1] = { 0 };
@@ -138,6 +138,7 @@ size_t UnpackScanner::collectDroppedFiles()
     if (isOK) {
         for (size_t i = 0; i < out_size; i++) {
             if (out_buffer[i] == 0) break;
+            if (out_buffer[i] == skipId) continue;
             allDroppedFiles.insert(out_buffer[i]);
         }
     }

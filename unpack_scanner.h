@@ -52,7 +52,7 @@ public:
         return stats;
     }
 
-    size_t collectDroppedFiles();
+    size_t collectDroppedFiles(ULONGLONG skipId);
 
     size_t killRemaining();
 

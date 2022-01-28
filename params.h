@@ -98,7 +98,7 @@ public:
 
         this->addParam(new StringParam(PARAM_IMG, false));
         this->setInfo(PARAM_IMG, "Path to the image from which the malware was run (may be a DLL or EXE)", 
-            "\t   This allows to follow processes respawned from the given image.\n\t   The file is deleted when unpacking finished.");
+            "\t   This allows to follow processes respawned from the given image.");
 
         this->addParam(new StringParam(PARAM_CMD, false));
         this->setInfo(PARAM_CMD, "Commandline arguments for the input exe");

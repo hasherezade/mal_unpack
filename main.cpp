@@ -17,6 +17,7 @@
 #include "process_util.h"
 #include "util.h"
 #include "version.h"
+#include "file_util.h"
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
@@ -98,7 +99,14 @@ int main(int argc, char* argv[])
 
     t_pesieve_res ret_code = PESIEVE_ERROR;
     const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
-    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, params.img_path);
+
+    ULONGLONG file_id = FILE_INVALID_FILE_ID;
+    if (strnlen(params.img_path, MAX_PATH) > 0 ) {
+        std::cout << "Watch img: " << params.img_path << "\n";
+        file_id = file_util::get_file_id(params.img_path);
+    }
+
+    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, file_id);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
         return ret_code;
@@ -150,7 +158,7 @@ int main(int argc, char* argv[])
     finalStats.scanTime = GetTickCount64() - start_tick;
     
     //this works only with the companion driver:
-    if (scanner.collectDroppedFiles()) {
+    if (scanner.collectDroppedFiles(file_id)) {
         std::cout << "The process dropped some files!\n";
     }
 
