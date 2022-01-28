@@ -21,7 +21,9 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
     si.cb = sizeof(STARTUPINFO);
 
     memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+#ifdef _DEBUG
     std::cout << "Commandline: " << cmd << std::endl;
+#endif
     if (!CreateProcessA(
         exe_path,
         (LPSTR)full_cmd.c_str(),

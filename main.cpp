@@ -47,6 +47,22 @@ void init_defaults(t_params_struct &params)
 #endif
 }
 
+ULONGLONG get_watched_file_id(const t_params_struct& params)
+{
+    ULONGLONG file_id = FILE_INVALID_FILE_ID;
+    if (strnlen(params.img_path, MAX_PATH) > 0
+        && strncmp(params.img_path, params.exe_path, MAX_PATH) != 0)
+    {
+        std::cout << "Watch respawns from the IMG: " << params.img_path << "\n";
+        file_id = file_util::get_file_id(params.img_path);
+    }
+    else {
+        std::cout << "Watch respawns from main EXE file: " << params.exe_path << "\n";
+        file_id = file_util::get_file_id(params.exe_path);
+    }
+    return file_id;
+}
+
 int main(int argc, char* argv[])
 {
     UnpackParams uParams(VERSION);
@@ -100,12 +116,7 @@ int main(int argc, char* argv[])
     t_pesieve_res ret_code = PESIEVE_ERROR;
     const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
 
-    ULONGLONG file_id = FILE_INVALID_FILE_ID;
-    if (strnlen(params.img_path, MAX_PATH) > 0 ) {
-        std::cout << "Watch img: " << params.img_path << "\n";
-        file_id = file_util::get_file_id(params.img_path);
-    }
-
+    ULONGLONG file_id = get_watched_file_id(params);
     HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, file_id);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;

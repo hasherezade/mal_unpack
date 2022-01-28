@@ -7,7 +7,7 @@
 
 namespace file_util {
 
-	ULONGLONG get_file_id(LPSTR img_path);
+	ULONGLONG get_file_id(const char* img_path);
 
 	size_t file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::wstring> &names);
 

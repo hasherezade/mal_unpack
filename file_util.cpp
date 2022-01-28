@@ -85,7 +85,7 @@ namespace file_util {
 	}
 };
 
-ULONGLONG file_util::get_file_id(LPSTR img_path)
+ULONGLONG file_util::get_file_id(const char* img_path)
 {
 	wchar_t file_name[MAX_PATH] = { 0 };
 	HANDLE file = CreateFileA(img_path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
