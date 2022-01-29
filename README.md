@@ -26,7 +26,9 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 
 **WARNING:** This unpacker deploys the original malware. Use it only on a VirtualMachine.
 
-For the best performance, install [MalUnpackCompanion driver](https://github.com/hasherezade/mal_unpack_drv).
+ℹ For the best performance, install [MalUnpackCompanion driver](https://github.com/hasherezade/mal_unpack_drv).
+
+ℹ Check also the python wrapper: [MalUnpack Runner](https://github.com/hasherezade/mal_unpack/tree/master/runner)
 
 
 ## Clone
