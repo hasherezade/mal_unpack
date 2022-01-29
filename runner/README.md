@@ -7,7 +7,7 @@ Allows to:
 
 Installation
 -
-1. Copy mal_unpack.exe to the current directory.
+1. Copy the latest [mal_unpack.exe](https://github.com/hasherezade/mal_unpack/releases) into the current directory.
 2. Install requirements:
 ```console
 pip install -r requirements.txt
