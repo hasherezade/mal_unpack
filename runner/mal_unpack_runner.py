@@ -147,7 +147,7 @@ def main():
         return
         
     # parse input arguments:
-    parser = argparse.ArgumentParser(description="Password scrambler")
+    parser = argparse.ArgumentParser(description="MalUnpack Runner")
     parser.add_argument('--inpath', dest="inpath", default=None, help="Malware(s) to be unpacked: it can be a file or a directory",
                             required=True)
     parser.add_argument('--timeout', dest="timeout", default=1000, help="Timeout, default = 1000", type=int)
