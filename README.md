@@ -1,6 +1,7 @@
 # mal_unpack
 
 [![Build status](https://ci.appveyor.com/api/projects/status/3cqqlah6unfhasik?svg=true)](https://ci.appveyor.com/project/hasherezade/mal-unpack)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fedbe124aa694761907bbe51bfc8d6f9)](https://www.codacy.com/gh/hasherezade/mal_unpack/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=hasherezade/mal_unpack&amp;utm_campaign=Badge_Grade)
 [![Commit activity](https://img.shields.io/github/commit-activity/m/hasherezade/mal_unpack)](https://github.com/hasherezade/mal_unpack/commits)
 [![Last Commit](https://img.shields.io/github/last-commit/hasherezade/mal_unpack/master)](https://github.com/hasherezade/mal_unpack/commits)
 
