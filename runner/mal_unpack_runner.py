@@ -90,7 +90,7 @@ def run_and_dump(sample, dump_dir, timeout):
     exe_name = sample
     if is_dll:
         cmd.append('/cmd')
-        cmd.append(sample)
+        cmd.append(sample + ' #1') #run the first exported function
         if is_64b:
             exe_name = DLL_LOAD64
         else:
