@@ -34,9 +34,9 @@ def get_config(sample):
         if (pe.is_exe() == False):
             is_dll = True
         is_64b = None
-        if (pe.OPTIONAL_HEADER.Magic & 0x10b):
+        if (pe.OPTIONAL_HEADER.Magic == 0x10b):
             is_64b = False
-        elif (pe.OPTIONAL_HEADER.Magic & 0x20b):
+        elif (pe.OPTIONAL_HEADER.Magic == 0x20b):
             is_64b = True     
         pe.close()
         if (is_64b == None):
