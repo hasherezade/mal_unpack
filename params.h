@@ -5,6 +5,7 @@ using namespace paramkit;
 
 #include "unpack_scanner.h"
 #include "util.h"
+#include "driver_comm.h"
 
 #define DEFAULT_TIMEOUT 1000
 
@@ -183,7 +184,7 @@ public:
     void printBanner()
     {
         std::stringstream ss;
-        ss << "mal_unpack " << this->versionStr;
+        ss << "MalUnpack v." << this->versionStr;
 #ifdef _WIN64
         ss << " (x64)" << "\n";
 #else
@@ -196,6 +197,7 @@ public:
         std::cout << "\n";
         DWORD pesieve_ver = PESieve_version;
         std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
+        std::cout << "MalUnpackCompanion: " << getDriverInfo() << "\n\n";
 
         print_in_color(paramkit::WARNING_COLOR, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n");
     }
@@ -213,7 +215,34 @@ public:
         fillPEsieveStruct(ps.hh_args.pesieve_args);
     }
 
+    virtual void printVersionInfo()
+    {
+        if (versionStr.length()) {
+            std::cout << "MalUnpack: v." << versionStr << std::endl;
+            std::cout << "MalUnpackCompanion: "<<  getDriverInfo() << std::endl;
+        }
+    }
+
 protected:
+    std::string getDriverInfo()
+    {
+        char buf[100] = { 0 };
+        driver::DriverStatus status = driver::get_version(buf, _countof(buf));
+
+        switch (status) {
+        case driver::DriverStatus::DRIVER_UNAVAILABLE:
+            return "driver not loaded";
+        case driver::DriverStatus::DRIVER_NOT_RESPONDING:
+            return "ERROR - driver not responding";
+        case driver::DriverStatus::DRIVER_OK:
+            if (buf) {
+                return "v." + std::string(buf);
+            }
+        default:
+            return "could not fetch the version";
+        }
+    }
+
     void fillPEsieveStruct(pesieve::t_params &ps)
     {
         bool hooks = false;

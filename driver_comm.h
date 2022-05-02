@@ -4,7 +4,17 @@
 
 namespace driver {
 
+	enum class DriverStatus {
+		DRIVER_UNKNOWN,
+		DRIVER_MALFORMED_REQUEST,
+		DRIVER_UNAVAILABLE,
+		DRIVER_NOT_RESPONDING,
+		DRIVER_OK
+	};
+
 	bool is_ready();
+
+	DriverStatus get_version(char* buf, size_t buf_len);
 
 	bool watch_pid(DWORD pid, ULONGLONG fileId);
 

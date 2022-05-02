@@ -14,6 +14,8 @@ struct ProcessDataEx {
 #define DRIVER_PATH  L"\\\\.\\MalUnpackCompanion"
 #define MUNPACK_COMPANION_DEVICE 0x8000
 
+#define IOCTL_MUNPACK_COMPANION_VERSION CTL_CODE(MUNPACK_COMPANION_DEVICE, \
+	0x800, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 #define IOCTL_MUNPACK_COMPANION_ADD_TO_WATCHED CTL_CODE(MUNPACK_COMPANION_DEVICE, \
 	0x801, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -89,7 +91,6 @@ namespace driver {
 	}
 };
 
-
 bool driver::is_ready()
 {
 	HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
@@ -98,6 +99,58 @@ bool driver::is_ready()
 	}
 	CloseHandle(hDevice);
 	return true;
+}
+
+typedef struct {
+	HANDLE hDevice;
+	char* buf;
+	DWORD buf_size;
+	DWORD returned_size;
+	BOOL success;
+} t_driver_version_args;
+
+DWORD WINAPI query_driver_version(LPVOID lpParam)
+{
+	t_driver_version_args* args = static_cast<t_driver_version_args*>(lpParam);
+	if (!args) {
+		return !S_OK;
+	}
+	args->success = DeviceIoControl(args->hDevice, IOCTL_MUNPACK_COMPANION_VERSION, 0, 0, args->buf, args->buf_size, &args->returned_size, nullptr);
+	if (args->success) {
+		return S_OK;
+	}
+	return !S_OK;
+}
+
+driver::DriverStatus driver::get_version(char* out_buffer, size_t buf_len)
+{
+	const DWORD max_wait = 1000;
+	if (!out_buffer || !buf_len) {
+		return DriverStatus::DRIVER_MALFORMED_REQUEST;
+	}
+	HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+	if (hDevice == INVALID_HANDLE_VALUE) {
+		return DriverStatus::DRIVER_UNAVAILABLE;
+	}
+
+	t_driver_version_args args = { 0 };
+	args.buf = out_buffer;
+	args.buf_size = buf_len;
+	args.hDevice = hDevice;
+	args.success = false;
+
+	DriverStatus status = DriverStatus::DRIVER_UNKNOWN;
+	HANDLE hThread = CreateThread(NULL, 0, query_driver_version, &args, 0, 0);
+	DWORD wait_result = WaitForSingleObject(hThread, max_wait);
+	if (wait_result == WAIT_TIMEOUT) {
+		TerminateThread(hThread, 0);
+		status = DriverStatus::DRIVER_NOT_RESPONDING;
+	}
+	CloseHandle(hDevice);
+	if (args.success) {
+		status = DriverStatus::DRIVER_OK;
+	}
+	return status;
 }
 
 bool driver::fetch_watched_processes(DWORD startPID, DWORD out_buffer[], size_t out_count)
