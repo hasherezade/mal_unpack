@@ -12,11 +12,12 @@ namespace driver {
 		DRIVER_OK
 	};
 
+
 	bool is_ready();
 
 	DriverStatus get_version(char* buf, size_t buf_len, ULONGLONG& nodesCount);
 
-	bool watch_pid(DWORD pid, ULONGLONG fileId);
+	bool watch_pid(DWORD pid, ULONGLONG fileId, DWORD noresp);
 
 	bool kill_watched_pid(DWORD pid);
 

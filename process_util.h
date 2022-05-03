@@ -8,9 +8,9 @@
 
 #define INVALID_PID_VALUE (DWORD)(-1)
 
-HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags, IN OPTIONAL ULONGLONG file_id);
+HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags, IN OPTIONAL ULONGLONG file_id, IN OPTIONAL DWORD noresp);
 
-HANDLE make_new_process(IN char* targetPath, IN char* cmdLine, IN DWORD flags, IN OPTIONAL ULONGLONG file_id);
+HANDLE make_new_process(IN char* targetPath, IN char* cmdLine, IN DWORD flags, IN OPTIONAL ULONGLONG file_id, IN OPTIONAL DWORD noresp);
 
 DWORD get_parent_pid(DWORD my_pid);
 
