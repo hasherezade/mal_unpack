@@ -14,7 +14,7 @@ namespace driver {
 
 	bool is_ready();
 
-	DriverStatus get_version(char* buf, size_t buf_len);
+	DriverStatus get_version(char* buf, size_t buf_len, ULONGLONG& nodesCount);
 
 	bool watch_pid(DWORD pid, ULONGLONG fileId);
 

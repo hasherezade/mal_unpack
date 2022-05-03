@@ -226,8 +226,9 @@ public:
 protected:
     std::string getDriverInfo()
     {
+        ULONGLONG nodesCount = 0;
         char buf[100] = { 0 };
-        driver::DriverStatus status = driver::get_version(buf, _countof(buf));
+        driver::DriverStatus status = driver::get_version(buf, _countof(buf), nodesCount);
 
         switch (status) {
         case driver::DriverStatus::DRIVER_UNAVAILABLE:
@@ -236,7 +237,10 @@ protected:
             return "ERROR - driver not responding";
         case driver::DriverStatus::DRIVER_OK:
             if (buf) {
-                return "v." + std::string(buf);
+                std::stringstream ss;
+                ss << "v." << std::string(buf);
+                ss << " (active sessions: " << std::dec << nodesCount << ")";
+                return ss.str();
             }
         default:
             return "could not fetch the version";

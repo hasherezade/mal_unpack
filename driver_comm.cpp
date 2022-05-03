@@ -29,6 +29,9 @@ struct ProcessDataEx {
 #define IOCTL_MUNPACK_COMPANION_LIST_FILES CTL_CODE(MUNPACK_COMPANION_DEVICE, \
 	0x804, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+#define IOCTL_MUNPACK_COMPANION_COUNT_NODES CTL_CODE(MUNPACK_COMPANION_DEVICE, \
+	0x806, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
 
 namespace driver {
 
@@ -106,6 +109,7 @@ typedef struct {
 	char* buf;
 	DWORD buf_size;
 	DWORD returned_size;
+	ULONGLONG nodesCount;
 	BOOL success;
 } t_driver_version_args;
 
@@ -115,14 +119,20 @@ DWORD WINAPI query_driver_version(LPVOID lpParam)
 	if (!args) {
 		return !S_OK;
 	}
-	args->success = DeviceIoControl(args->hDevice, IOCTL_MUNPACK_COMPANION_VERSION, 0, 0, args->buf, args->buf_size, &args->returned_size, nullptr);
-	if (args->success) {
-		return S_OK;
+	BOOL success = DeviceIoControl(args->hDevice, IOCTL_MUNPACK_COMPANION_VERSION, 0, 0, args->buf, args->buf_size, &args->returned_size, nullptr);
+	if (!success) {
+		return !S_OK;
 	}
+	DWORD returned = 0;
+	success = DeviceIoControl(args->hDevice, IOCTL_MUNPACK_COMPANION_COUNT_NODES, 0, 0, &args->nodesCount, sizeof(args->nodesCount), &returned, nullptr);
+	if (!success) {
+		return !S_OK;
+	}
+	args->success = success;
 	return !S_OK;
 }
 
-driver::DriverStatus driver::get_version(char* out_buffer, size_t buf_len)
+driver::DriverStatus driver::get_version(char* out_buffer, size_t buf_len, ULONGLONG &nodesCount)
 {
 	const DWORD max_wait = 1000;
 	if (!out_buffer || !buf_len) {
@@ -148,6 +158,7 @@ driver::DriverStatus driver::get_version(char* out_buffer, size_t buf_len)
 	}
 	CloseHandle(hDevice);
 	if (args.success) {
+		nodesCount = args.nodesCount;
 		status = DriverStatus::DRIVER_OK;
 	}
 	return status;
