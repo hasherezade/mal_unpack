@@ -21,6 +21,7 @@ using namespace paramkit;
 #define PARAM_HOOKS "hooks"
 #define PARAM_CACHE "cache"
 #define PARAM_IMP "imp"
+#define PARAM_NORESPAWN "noresp"
 #define PARAM_TRIGGER "trigger"
 #define PARAM_REFLECTION "refl"
 
@@ -30,6 +31,13 @@ typedef enum {
     COUNT_TRIG
 } t_term_trigger;
 
+typedef enum {
+    NORESP_NO_RESTRICTION = 0,
+    NORESP_DROPPED_FILES = 1,
+    NORESP_ALL_FILES = 2,
+    COUNT_NORESP
+} t_noresp;
+
 typedef struct {
     char exe_path[MAX_PATH];
     char exe_cmd[MAX_PATH];
@@ -37,6 +45,7 @@ typedef struct {
     char img_path[MAX_PATH];
     DWORD timeout;
     t_term_trigger trigger;
+    t_noresp noresp;
     UnpackScanner::t_unp_params hh_args;
 } t_params_struct;
 
@@ -159,6 +168,16 @@ public:
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2, "R2", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2));
         }
 
+        EnumParam* norespParam = new EnumParam(PARAM_NORESPAWN, "respawn_protect", false);
+        if (norespParam) {
+            this->addParam(norespParam);
+            this->setInfo(PARAM_NORESPAWN, "protect against malware respawning after the unpacking session finished", 
+                std::string(INFO_SPACER) + "WARNING: this will cause your sample to be restricted by the driver\n");
+            norespParam->addEnumValue(t_noresp::NORESP_NO_RESTRICTION, "N", "disabled: allow the malware to be rerun freely");
+            norespParam->addEnumValue(t_noresp::NORESP_DROPPED_FILES, "D", "dropped files: block dropped files [DEFAULT]");
+            norespParam->addEnumValue(t_noresp::NORESP_ALL_FILES, "A", "all: block all associated files (including the main sample)");
+        }
+
         //optional: group parameters
         std::string str_group = "1. scanner settings";
         this->addGroup(new ParamGroup(str_group));
@@ -211,7 +230,7 @@ public:
 
         copyVal<IntParam>(PARAM_TIMEOUT, ps.timeout);
         copyVal<EnumParam>(PARAM_TRIGGER, ps.trigger);
-
+        copyVal<EnumParam>(PARAM_NORESPAWN, ps.noresp);
         fillPEsieveStruct(ps.hh_args.pesieve_args);
     }
 
