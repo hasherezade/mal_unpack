@@ -3,7 +3,12 @@
 #include <iostream>
 
 struct ProcessDataBasic {
-	DWORD Id;
+	DWORD Pid;
+};
+
+struct ProcessDataEx_v1 {
+	ULONG Pid;
+	LONGLONG fileId;
 };
 
 struct ProcessDataEx_v2 {
@@ -34,6 +39,9 @@ typedef ProcessDataEx_v2 ProcessDataEx;
 
 #define IOCTL_MUNPACK_COMPANION_COUNT_NODES CTL_CODE(MUNPACK_COMPANION_DEVICE, \
 	0x806, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define IOCTL_MUNPACK_COMPANION_DELETE_WATCHED_FILE CTL_CODE(MUNPACK_COMPANION_DEVICE, \
+	0x807, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 
 namespace driver {
@@ -75,23 +83,20 @@ namespace driver {
 		return success == TRUE ? true : false;
 	}
 
-	bool request_action_on_pid(DWORD ioctl, DWORD pid)
+	template<typename PROCESS_DATA>
+	bool request_action_on_pid(DWORD ioctl, PROCESS_DATA& data)
 	{
-		if (!ioctl || !pid) {
+		if (!ioctl || !data.Pid) {
 			return false;
 		}
 		HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 		if (hDevice == INVALID_HANDLE_VALUE) {
-			std::cerr << "Failed to open device" << std::endl;
+			//std::cerr << "Failed to open device" << std::endl;
 			return false;
 		}
-
-		ProcessDataBasic data = { 0 };
-		data.Id = pid;
-
 		BOOL success = FALSE;
 		DWORD returned = 0;
-		success = DeviceIoControl(hDevice, ioctl, &data, sizeof(data), nullptr, 0, &returned, nullptr);
+		success = DeviceIoControl(hDevice, ioctl, &data, sizeof(PROCESS_DATA), nullptr, 0, &returned, nullptr);
 		CloseHandle(hDevice);
 		return success == TRUE ? true : false;
 	}
@@ -201,25 +206,24 @@ bool driver::watch_pid(DWORD pid, ULONGLONG fileId, DWORD noresp)
 	if (!pid) {
 		return false;
 	}
-	HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-	if (hDevice == INVALID_HANDLE_VALUE) {
-		std::cerr << "Failed to open device" << std::endl;
-		return false;
-	}
-
 	ProcessDataEx data = { 0 };
 	data.Pid = pid;
 	data.fileId = fileId;
 	data.noresp = noresp;
-
-	BOOL success = FALSE;
-	DWORD returned = 0;
-	success = DeviceIoControl(hDevice, IOCTL_MUNPACK_COMPANION_ADD_TO_WATCHED, &data, sizeof(data), nullptr, 0, &returned, nullptr);
-	CloseHandle(hDevice);
-	return success == TRUE ? true : false;
+	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_ADD_TO_WATCHED, data);
 }
 
 bool driver::kill_watched_pid(DWORD pid)
 {
-	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_TERMINATE_WATCHED, pid);
+	ProcessDataBasic data = { 0 };
+	data.Pid = pid;
+	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_TERMINATE_WATCHED, data);
+}
+
+bool driver::delete_watched_file(DWORD pid, ULONGLONG fileId)
+{
+	ProcessDataEx_v1 data = { 0 };
+	data.Pid = pid;
+	data.fileId = fileId;
+	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_DELETE_WATCHED_FILE, data);
 }

@@ -118,8 +118,6 @@ size_t UnpackScanner::killRemaining()
     
     size_t remaining = kill_pids(allTargets);
     remaining += kill_pids(unkilled_pids);
-
-    deleteDroppedFiles();
     return remaining;
 }
 
@@ -138,11 +136,11 @@ size_t UnpackScanner::collectDroppedFiles(ULONGLONG skipId)
     return allDroppedFiles.size();
 }
 
-void print_file_names(const std::set<std::wstring> &names)
+void print_file_names(const std::map<LONGLONG, std::wstring>&names)
 {
-    std::set<std::wstring>::const_iterator itr;
+    std::map<LONGLONG, std::wstring>::const_iterator itr;
     for (itr = names.begin(); itr != names.end(); ++itr) {
-        std::wcout << "File: " << *itr << "\n";
+        std::wcout << "File: " << itr->second << "\n";
     }
 }
 
@@ -150,11 +148,11 @@ size_t UnpackScanner::deleteDroppedFiles()
 {
     const size_t all_files = allDroppedFiles.size();
     if (all_files == 0) {
-        return 0; //nothing to delete
+        return 0; //nothing to deleteti
     }
     
     std::cerr << "[INFO] Found dropped files:\n";
-    std::set<std::wstring> names;
+    std::map<LONGLONG,std::wstring> names;
     file_util::file_ids_to_names(allDroppedFiles, names);
     print_file_names(names);
     const size_t all_names = names.size();
@@ -164,7 +162,7 @@ size_t UnpackScanner::deleteDroppedFiles()
     size_t deleted = 0;
     std::cerr << "[INFO] Trying to delete...\n";
     for (attempts = 0; remaining && (attempts < MAX_ATTEMPTS); attempts++) {
-        deleted += file_util::delete_dropped_files(names);
+        deleted += file_util::delete_dropped_files(names, this->unp_args.start_pid);
         remaining = all_names - deleted;
         if (remaining) {
 #ifdef _DEBUG

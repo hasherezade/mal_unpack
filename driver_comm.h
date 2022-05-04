@@ -21,6 +21,8 @@ namespace driver {
 
 	bool kill_watched_pid(DWORD pid);
 
+	bool delete_watched_file(DWORD pid, ULONGLONG fileId);
+
 	bool fetch_watched_processes(DWORD startPID, DWORD out_buffer[], size_t out_count);
 
 	bool fetch_watched_files(DWORD startPID, LONGLONG out_buffer[], size_t out_count);
