@@ -33,27 +33,7 @@ namespace file_util {
 
 		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
-	/*
-	bool is_file_exist(HANDLE volumeHndl, LONGLONG file_id)
-	{
-		bool file_exist = false;
-		FILE_ID_DESCRIPTOR FileDesc = { 0 };
-		FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
-		FileDesc.Type = FileIdType;
-		FileDesc.FileId.QuadPart = file_id;
 
-		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, 0);
-		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
-			if (GetLastError() == ERROR_INVALID_PARAMETER) {
-				file_exist = false;
-			}
-			return false;
-		}
-		file_exist = true;
-		NtClose(hFile);
-		return file_exist;
-	}
-	*/
 	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
