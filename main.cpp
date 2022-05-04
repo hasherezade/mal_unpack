@@ -189,8 +189,7 @@ int main(int argc, char* argv[])
         std::cout << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds; " << count << " attempts." << std::endl;
         ret_code = PESIEVE_DETECTED;
     }
-
-    if (kill_pid(GetProcessId(proc))) {
+    if (kill_pid(params.hh_args.start_pid)) {
         std::cout << "[OK] The initial process got killed." << std::endl;
     }
     CloseHandle(proc);
@@ -198,6 +197,6 @@ int main(int argc, char* argv[])
     if (remaining > 0) {
         std::cout << "WARNING: " << remaining << " of the related processes are not killed" << std::endl;
     }
-    
+    scanner.deleteDroppedFiles();
     return ret_code;
 }

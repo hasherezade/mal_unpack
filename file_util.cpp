@@ -1,6 +1,7 @@
 #include "file_util.h"
 
 #include "ntddk.h"
+#include "driver_comm.h"
 
 namespace file_util {
 
@@ -32,7 +33,27 @@ namespace file_util {
 
 		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
+	/*
+	bool is_file_exist(HANDLE volumeHndl, LONGLONG file_id)
+	{
+		bool file_exist = false;
+		FILE_ID_DESCRIPTOR FileDesc = { 0 };
+		FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
+		FileDesc.Type = FileIdType;
+		FileDesc.FileId.QuadPart = file_id;
 
+		HANDLE hFile = OpenFileById(volumeHndl, &FileDesc, SYNCHRONIZE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ, NULL, 0);
+		if (!hFile || hFile == INVALID_HANDLE_VALUE) {
+			if (GetLastError() == ERROR_INVALID_PARAMETER) {
+				file_exist = false;
+			}
+			return false;
+		}
+		file_exist = true;
+		NtClose(hFile);
+		return file_exist;
+	}
+	*/
 	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
@@ -126,7 +147,7 @@ ULONGLONG file_util::get_file_id(const char* img_path)
 	return FILE_INVALID_FILE_ID;
 }
 
-size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::wstring>& names)
+size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGLONG, std::wstring>& names)
 {
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -152,12 +173,12 @@ size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::
 			continue;
 		}
 		processed++;
-		names.insert(file_name);
+		names[fileId] = file_name;
 	}
 	return processed;
 }
 
-size_t file_util::delete_dropped_files(std::set<std::wstring>& names)
+size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, DWORD ownerPid)
 {
 	std::wstring suffix = L".unsafe";
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
@@ -170,14 +191,17 @@ size_t file_util::delete_dropped_files(std::set<std::wstring>& names)
 		return 0;
 	}
 	size_t processed = 0;
-	std::set<std::wstring>::iterator itr = names.begin();
+	std::map<LONGLONG, std::wstring>::iterator itr = names.begin();
 
 	for (itr = names.begin(); itr != names.end(); ) {
-
-		const std::wstring file_name = *itr;
+		const LONGLONG fileId = itr->first;
+		const std::wstring file_name = itr->second;
 		bool isDeleted = false;
 		bool isMoved = false;
-		
+		if (driver::delete_watched_file(ownerPid, fileId)) {
+			std::cout << "Deleted by the driver\n";
+			isDeleted = true;
+		}
 		const std::wstring new_name = std::wstring(file_name) + suffix;
 		if (MoveFileExW(file_name.c_str(), new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
 			isMoved = true;
@@ -193,7 +217,7 @@ size_t file_util::delete_dropped_files(std::set<std::wstring>& names)
 		}
 		//erase the name from the list:
 		if (isDeleted) {
-			std::set<std::wstring>::iterator curr_itr = itr;
+			std::map<LONGLONG, std::wstring>::iterator curr_itr = itr;
 			++itr;
 			names.erase(curr_itr);
 			processed++;
