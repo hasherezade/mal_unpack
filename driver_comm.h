@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <iostream>
 
 namespace driver {
 
@@ -21,7 +22,7 @@ namespace driver {
 
 	bool kill_watched_pid(DWORD pid);
 
-	bool delete_watched_file(DWORD pid, ULONGLONG fileId);
+	bool delete_watched_file(DWORD pid, const std::wstring& filename);
 
 	bool fetch_watched_processes(DWORD startPID, DWORD out_buffer[], size_t out_count);
 

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+const USHORT MAX_PATH_LEN = 1024;
+
 struct ProcessDataBasic {
 	DWORD Pid;
 };
@@ -15,6 +17,11 @@ struct ProcessDataEx_v2 {
 	ULONG Pid;
 	LONGLONG fileId;
 	ULONG noresp; //respawn protection level
+};
+
+struct ProcessFileData {
+	ULONG Pid;
+	WCHAR FileName[MAX_PATH_LEN];
 };
 
 typedef ProcessDataEx_v2 ProcessDataEx;
@@ -220,10 +227,19 @@ bool driver::kill_watched_pid(DWORD pid)
 	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_TERMINATE_WATCHED, data);
 }
 
-bool driver::delete_watched_file(DWORD pid, ULONGLONG fileId)
+bool driver::delete_watched_file(DWORD pid, const std::wstring &filename)
 {
-	ProcessDataEx_v1 data = { 0 };
+	size_t filenameLen = filename.length();
+	if (!pid || !filenameLen) {
+		return false;
+	}
+	ProcessFileData data = { 0 };
 	data.Pid = pid;
-	data.fileId = fileId;
+	size_t maxLen = MAX_PATH_LEN;
+	if (filenameLen < maxLen) {
+		maxLen = filenameLen;
+	}
+	::memcpy(data.FileName, filename.c_str(), maxLen*sizeof(WCHAR));
+
 	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_DELETE_WATCHED_FILE, data);
 }
