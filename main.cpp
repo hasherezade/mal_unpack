@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 
     ULONGLONG file_id;
     bool is_img_diff = get_watched_file_id(params, file_id);
-    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, file_id);
+    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, file_id, params.noresp);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
         return ret_code;

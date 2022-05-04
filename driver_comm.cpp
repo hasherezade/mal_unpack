@@ -2,14 +2,17 @@
 
 #include <iostream>
 
-struct ProcessData {
+struct ProcessDataBasic {
 	DWORD Id;
 };
 
-struct ProcessDataEx {
-	DWORD Id;
+struct ProcessDataEx_v2 {
+	ULONG Pid;
 	LONGLONG fileId;
+	ULONG noresp; //respawn protection level
 };
+
+typedef ProcessDataEx_v2 ProcessDataEx;
 
 #define DRIVER_PATH  L"\\\\.\\MalUnpackCompanion"
 #define MUNPACK_COMPANION_DEVICE 0x8000
@@ -83,7 +86,7 @@ namespace driver {
 			return false;
 		}
 
-		ProcessData data = { 0 };
+		ProcessDataBasic data = { 0 };
 		data.Id = pid;
 
 		BOOL success = FALSE;
@@ -193,7 +196,7 @@ bool driver::fetch_watched_files(DWORD startPID, LONGLONG out_buffer[], size_t o
 }
 
 
-bool driver::watch_pid(DWORD pid, ULONGLONG fileId)
+bool driver::watch_pid(DWORD pid, ULONGLONG fileId, DWORD noresp)
 {
 	if (!pid) {
 		return false;
@@ -205,8 +208,9 @@ bool driver::watch_pid(DWORD pid, ULONGLONG fileId)
 	}
 
 	ProcessDataEx data = { 0 };
-	data.Id = pid;
+	data.Pid = pid;
 	data.fileId = fileId;
+	data.noresp = noresp;
 
 	BOOL success = FALSE;
 	DWORD returned = 0;
