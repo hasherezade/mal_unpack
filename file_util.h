@@ -14,5 +14,5 @@ namespace file_util {
 
 	size_t file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGLONG, std::wstring> &names, DWORD name_type);
 
-	size_t delete_dropped_files(std::map<LONGLONG, std::wstring>& names, DWORD ownerPid, time_t timestamp);
+	size_t delete_dropped_files(std::map<LONGLONG, std::wstring>& names, time_t timestamp, const std::wstring &suffix);
 }

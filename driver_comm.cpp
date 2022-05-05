@@ -95,9 +95,7 @@ namespace driver {
 			//std::cerr << "Failed to open device" << std::endl;
 			return false;
 		}
-		BOOL success = FALSE;
-		std::cout << "Passed buffer len: " << std::dec << dataSize << "\n";
-		success = DeviceIoControl(hDevice, ioctl, data, dataSize, nullptr, 0, &returned, nullptr);
+		BOOL success = DeviceIoControl(hDevice, ioctl, data, dataSize, nullptr, 0, &returned, nullptr);
 		CloseHandle(hDevice);
 		return success == TRUE ? true : false;
 	}
@@ -111,19 +109,6 @@ namespace driver {
 		DWORD returned = 0;
 		const size_t data_size = sizeof(PROCESS_DATA);
 		return request_action(ioctl, &data, data_size, returned);
-		/*HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-		if (hDevice == INVALID_HANDLE_VALUE) {
-			//std::cerr << "Failed to open device" << std::endl;
-			return false;
-		}
-		BOOL success = FALSE;
-		DWORD returned = 0;
-
-		std::cout << "Passed buffer len: " << std::dec << buf_size << "\n";
-		success = DeviceIoControl(hDevice, ioctl, &data, sizeof(PROCESS_DATA), nullptr, 0, &returned, nullptr);
-		CloseHandle(hDevice);
-		return success == TRUE ? true : false;
-		*/
 	}
 };
 
@@ -266,4 +251,36 @@ bool driver::delete_watched_file(DWORD pid, const std::wstring &filename)
 
 	::free(data);
 	return is_ok;
+}
+
+size_t driver::delete_dropped_files_by_driver(std::map<LONGLONG, std::wstring>& nt_names, DWORD ownerPid)
+{
+	size_t processed = 0;
+	std::map<LONGLONG, std::wstring>::iterator itr = nt_names.begin();
+
+	for (itr = nt_names.begin(); itr != nt_names.end(); ) {
+		const LONGLONG fileId = itr->first;
+		const std::wstring file_name = itr->second;
+		bool isDeleted = false;
+
+		if (driver::delete_watched_file(ownerPid, file_name)) {
+			isDeleted = true;
+		}
+		
+		if (isDeleted) {
+			std::wcout << "File: " << file_name;
+			if (isDeleted) std::cout << " [DELETED]";
+			std::wcout << "\n";
+		}
+		//erase the name from the list:
+		if (isDeleted) {
+			std::map<LONGLONG, std::wstring>::iterator curr_itr = itr;
+			++itr;
+			nt_names.erase(curr_itr);
+			processed++;
+			continue;
+		}
+		++itr;
+	}
+	return processed;
 }

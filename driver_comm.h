@@ -2,6 +2,10 @@
 
 #include <windows.h>
 #include <iostream>
+#include <string>
+#include <map>
+
+#define RENAMED_EXTENSION L".unsafe"
 
 namespace driver {
 
@@ -13,7 +17,6 @@ namespace driver {
 		DRIVER_OK
 	};
 
-
 	bool is_ready();
 
 	DriverStatus get_version(char* buf, size_t buf_len, ULONGLONG& nodesCount);
@@ -23,6 +26,8 @@ namespace driver {
 	bool kill_watched_pid(DWORD pid);
 
 	bool delete_watched_file(DWORD pid, const std::wstring& filename);
+
+	size_t delete_dropped_files_by_driver(std::map<LONGLONG, std::wstring>& nt_names, DWORD ownerPid);
 
 	bool fetch_watched_processes(DWORD startPID, DWORD out_buffer[], size_t out_count);
 

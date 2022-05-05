@@ -1,7 +1,6 @@
 #include "file_util.h"
 
 #include "ntddk.h"
-#include "driver_comm.h"
 
 #include <string>
 #include <sstream>
@@ -37,7 +36,7 @@ namespace file_util {
 		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
 
-	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist, DWORD path_type = VOLUME_NAME_DOS)
+	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist, DWORD path_type)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
 		FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -161,18 +160,12 @@ size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGL
 	return processed;
 }
 
-size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, DWORD ownerPid, time_t timestamp)
+size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, time_t timestamp, const std::wstring &suffix)
 {
-	std::wstring suffix = L".unsafe";
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
 	FileDesc.Type = FileIdType;
 
-	wchar_t file_name[MAX_PATH] = { 0 };
-	HANDLE volumeHndl = NULL;
-	if (fetch_volume_handle(get_system_drive(), volumeHndl) != STATUS_SUCCESS) {
-		return 0;
-	}
 	size_t processed = 0;
 	std::map<LONGLONG, std::wstring>::iterator itr = names.begin();
 
@@ -182,25 +175,14 @@ size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, 
 		const std::wstring file_name = itr->second;
 		bool isDeleted = false;
 		bool isMoved = false;
-		bool isExist = false;
-		if (get_file_path_by_id(volumeHndl, fileId, nt_path, _countof(nt_path), isExist, VOLUME_NAME_NT)) {
-			if (!isExist) {
-				isDeleted = true;
-			}
-			else {
-				if (driver::delete_watched_file(ownerPid, nt_path)) {
-					std::cout << "Deleted by the driver\n";
-					isDeleted = true;
-				}
-			}
-		}
+
 		std::wstringstream ss;
 		ss << std::wstring(file_name)
 			<< "." << timestamp
 			<< suffix;
 
-		const std::wstring new_name = std::wstring(file_name) + suffix;
-		if (MoveFileExW(file_name.c_str(), ss.str().c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
+		const std::wstring new_name = ss.str();
+		if (MoveFileExW(file_name.c_str(), new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
 			isMoved = true;
 		}
 		if (DeleteFileW(new_name.c_str())) {
