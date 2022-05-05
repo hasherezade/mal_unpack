@@ -127,7 +127,7 @@ typedef struct {
 	char* buf;
 	DWORD buf_size;
 	DWORD returned_size;
-	ULONGLONG nodesCount;
+	ULONGLONG *nodesCount;
 	BOOL success;
 } t_driver_version_args;
 
@@ -141,16 +141,18 @@ DWORD WINAPI query_driver_version(LPVOID lpParam)
 	if (!success) {
 		return !S_OK;
 	}
-	DWORD returned = 0;
-	success = DeviceIoControl(args->hDevice, IOCTL_MUNPACK_COMPANION_COUNT_NODES, 0, 0, &args->nodesCount, sizeof(args->nodesCount), &returned, nullptr);
-	if (!success) {
-		return !S_OK;
+	if (args->nodesCount) {
+		DWORD returned = 0;
+		success = DeviceIoControl(args->hDevice, IOCTL_MUNPACK_COMPANION_COUNT_NODES, 0, 0, args->nodesCount, sizeof(ULONGLONG), &returned, nullptr);
+		if (!success) {
+			return !S_OK;
+		}
 	}
 	args->success = success;
 	return !S_OK;
 }
 
-driver::DriverStatus driver::get_version(char* out_buffer, size_t buf_len, ULONGLONG &nodesCount)
+driver::DriverStatus driver::get_version(char* out_buffer, size_t buf_len, ULONGLONG *nodesCount)
 {
 	const DWORD max_wait = 1000;
 	if (!out_buffer || !buf_len) {
@@ -166,6 +168,7 @@ driver::DriverStatus driver::get_version(char* out_buffer, size_t buf_len, ULONG
 	args.buf_size = buf_len;
 	args.hDevice = hDevice;
 	args.success = false;
+	args.nodesCount = nodesCount;
 
 	DriverStatus status = DriverStatus::DRIVER_UNKNOWN;
 	HANDLE hThread = CreateThread(NULL, 0, query_driver_version, &args, 0, 0);
@@ -176,7 +179,6 @@ driver::DriverStatus driver::get_version(char* out_buffer, size_t buf_len, ULONG
 	}
 	CloseHandle(hDevice);
 	if (args.success) {
-		nodesCount = args.nodesCount;
 		status = DriverStatus::DRIVER_OK;
 	}
 	return status;

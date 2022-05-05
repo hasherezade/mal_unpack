@@ -173,8 +173,8 @@ public:
             this->addParam(norespParam);
             this->setInfo(PARAM_NORESPAWN, "protect against malware respawning after the unpacking session finished", 
                 std::string(INFO_SPACER) + "WARNING: this will cause your sample to be restricted by the driver\n");
-            norespParam->addEnumValue(t_noresp::NORESP_NO_RESTRICTION, "N", "disabled: allow the malware to be rerun freely");
-            norespParam->addEnumValue(t_noresp::NORESP_DROPPED_FILES, "D", "dropped files: block dropped files [DEFAULT]");
+            norespParam->addEnumValue(t_noresp::NORESP_NO_RESTRICTION, "N", "disabled: allow the malware to be rerun freely [DEFAULT]");
+            norespParam->addEnumValue(t_noresp::NORESP_DROPPED_FILES, "D", "dropped files: block dropped files");
             norespParam->addEnumValue(t_noresp::NORESP_ALL_FILES, "A", "all: block all associated files (including the main sample)");
         }
 
@@ -216,7 +216,7 @@ public:
         std::cout << "\n";
         DWORD pesieve_ver = PESieve_version;
         std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
-        std::cout << "MalUnpackCompanion: " << getDriverInfo() << "\n\n";
+        std::cout << "MalUnpackCompanion: " << getDriverInfo(false) << "\n\n";
 
         print_in_color(paramkit::WARNING_COLOR, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n");
     }
@@ -238,16 +238,21 @@ public:
     {
         if (versionStr.length()) {
             std::cout << "MalUnpack: v." << versionStr << std::endl;
-            std::cout << "MalUnpackCompanion: "<<  getDriverInfo() << std::endl;
+            std::cout << "MalUnpackCompanion: "<<  getDriverInfo(true) << std::endl;
         }
     }
 
 protected:
-    std::string getDriverInfo()
+    std::string getDriverInfo(bool showNodes)
     {
         ULONGLONG nodesCount = 0;
+        ULONGLONG *nodesCountPtr = &nodesCount;
         char buf[100] = { 0 };
-        driver::DriverStatus status = driver::get_version(buf, _countof(buf), nodesCount);
+        if (!showNodes) {
+            nodesCountPtr = nullptr;
+        }
+
+        driver::DriverStatus status = driver::get_version(buf, _countof(buf), nodesCountPtr);
 
         switch (status) {
         case driver::DriverStatus::DRIVER_UNAVAILABLE:
@@ -258,7 +263,9 @@ protected:
             if (buf) {
                 std::stringstream ss;
                 ss << "v." << std::string(buf);
-                ss << " (active sessions: " << std::dec << nodesCount << ")";
+                if (showNodes) {
+                    ss << " (active sessions: " << std::dec << nodesCount << ")";
+                }
                 return ss.str();
             }
         default:
