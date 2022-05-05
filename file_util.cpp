@@ -2,6 +2,9 @@
 
 #include "ntddk.h"
 
+#include <string>
+#include <sstream>
+
 namespace file_util {
 
 	const SIZE_T MAX_NT_PATH = (MAX_PATH * 2);
@@ -33,7 +36,7 @@ namespace file_util {
 		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
 
-	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist)
+	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist, DWORD path_type)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
 		FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -48,7 +51,7 @@ namespace file_util {
 			return false;
 		}
 		file_exist = true;
-		DWORD got_len = GetFinalPathNameByHandleW(hFile, file_name_buf, file_name_len, VOLUME_NAME_DOS);
+		DWORD got_len = GetFinalPathNameByHandleW(hFile, file_name_buf, file_name_len, path_type);
 		NtClose(hFile);
 		return (got_len != 0) ? true: false;
 	}
@@ -126,7 +129,7 @@ ULONGLONG file_util::get_file_id(const char* img_path)
 	return FILE_INVALID_FILE_ID;
 }
 
-size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::wstring>& names)
+size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGLONG, std::wstring>& names, DWORD name_type)
 {
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -144,7 +147,7 @@ size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::
 		LONGLONG fileId = *itr;
 
 		bool file_exist = true;
-		const bool gotName = get_file_path_by_id(volumeHndl, fileId, file_name, MAX_PATH, file_exist);
+		const bool gotName = get_file_path_by_id(volumeHndl, fileId, file_name, MAX_PATH, file_exist, name_type);
 		if (!gotName) {
 			if (file_exist) {
 				std::cerr << "Failed to retrieve the name of the file with the ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
@@ -152,33 +155,33 @@ size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::
 			continue;
 		}
 		processed++;
-		names.insert(file_name);
+		names[fileId] = file_name;
 	}
 	return processed;
 }
 
-size_t file_util::delete_dropped_files(std::set<std::wstring>& names)
+size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, time_t timestamp, const std::wstring &suffix)
 {
-	std::wstring suffix = L".unsafe";
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
 	FileDesc.Type = FileIdType;
 
-	wchar_t file_name[MAX_PATH] = { 0 };
-	HANDLE volumeHndl = NULL;
-	if (fetch_volume_handle(get_system_drive(), volumeHndl) != STATUS_SUCCESS) {
-		return 0;
-	}
 	size_t processed = 0;
-	std::set<std::wstring>::iterator itr = names.begin();
+	std::map<LONGLONG, std::wstring>::iterator itr = names.begin();
 
+	WCHAR nt_path[1024] = { 0 };
 	for (itr = names.begin(); itr != names.end(); ) {
-
-		const std::wstring file_name = *itr;
+		const LONGLONG fileId = itr->first;
+		const std::wstring file_name = itr->second;
 		bool isDeleted = false;
 		bool isMoved = false;
-		
-		const std::wstring new_name = std::wstring(file_name) + suffix;
+
+		std::wstringstream ss;
+		ss << std::wstring(file_name)
+			<< "." << timestamp
+			<< suffix;
+
+		const std::wstring new_name = ss.str();
 		if (MoveFileExW(file_name.c_str(), new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
 			isMoved = true;
 		}
@@ -193,7 +196,7 @@ size_t file_util::delete_dropped_files(std::set<std::wstring>& names)
 		}
 		//erase the name from the list:
 		if (isDeleted) {
-			std::set<std::wstring>::iterator curr_itr = itr;
+			std::map<LONGLONG, std::wstring>::iterator curr_itr = itr;
 			++itr;
 			names.erase(curr_itr);
 			processed++;

@@ -21,6 +21,7 @@ using namespace paramkit;
 #define PARAM_HOOKS "hooks"
 #define PARAM_CACHE "cache"
 #define PARAM_IMP "imp"
+#define PARAM_NORESPAWN "noresp"
 #define PARAM_TRIGGER "trigger"
 #define PARAM_REFLECTION "refl"
 
@@ -30,6 +31,13 @@ typedef enum {
     COUNT_TRIG
 } t_term_trigger;
 
+typedef enum {
+    NORESP_NO_RESTRICTION = 0,
+    NORESP_DROPPED_FILES = 1,
+    NORESP_ALL_FILES = 2,
+    COUNT_NORESP
+} t_noresp;
+
 typedef struct {
     char exe_path[MAX_PATH];
     char exe_cmd[MAX_PATH];
@@ -37,6 +45,7 @@ typedef struct {
     char img_path[MAX_PATH];
     DWORD timeout;
     t_term_trigger trigger;
+    t_noresp noresp;
     UnpackScanner::t_unp_params hh_args;
 } t_params_struct;
 
@@ -159,6 +168,25 @@ public:
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2, "R2", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2));
         }
 
+
+        EnumParam* norespParam = new EnumParam(PARAM_NORESPAWN, "respawn_protect", false);
+        if (norespParam) {
+
+            std::stringstream ss;
+            ss << "Protect against malware respawning after the unpacking session finished";
+
+            this->addParam(norespParam);
+            if (!driver::is_ready()) {
+                norespParam->setActive(false);
+                ss << "\n" << std::string(INFO_SPACER) + "(to activate, install MalUnpackCompanion driver)";
+            }
+            this->setInfo(PARAM_NORESPAWN, ss.str(),
+                std::string(INFO_SPACER) + "WARNING: this will cause your sample to be restricted by the driver\n");
+            norespParam->addEnumValue(t_noresp::NORESP_NO_RESTRICTION, "N", "disabled: allow the malware to be rerun freely [DEFAULT]");
+            norespParam->addEnumValue(t_noresp::NORESP_DROPPED_FILES, "D", "dropped files: block dropped files");
+            norespParam->addEnumValue(t_noresp::NORESP_ALL_FILES, "A", "all: block all associated files (including the main sample)");
+        }
+
         //optional: group parameters
         std::string str_group = "1. scanner settings";
         this->addGroup(new ParamGroup(str_group));
@@ -197,7 +225,7 @@ public:
         std::cout << "\n";
         DWORD pesieve_ver = PESieve_version;
         std::cout << "using: PE-sieve v." << version_to_str(pesieve_ver) << "\n\n";
-        std::cout << "MalUnpackCompanion: " << getDriverInfo() << "\n\n";
+        std::cout << "MalUnpackCompanion: " << getDriverInfo(false) << "\n\n";
 
         print_in_color(paramkit::WARNING_COLOR, "CAUTION: Supplied malware will be deployed! Use it on a VM only!\n");
     }
@@ -211,7 +239,7 @@ public:
 
         copyVal<IntParam>(PARAM_TIMEOUT, ps.timeout);
         copyVal<EnumParam>(PARAM_TRIGGER, ps.trigger);
-
+        copyVal<EnumParam>(PARAM_NORESPAWN, ps.noresp);
         fillPEsieveStruct(ps.hh_args.pesieve_args);
     }
 
@@ -219,15 +247,21 @@ public:
     {
         if (versionStr.length()) {
             std::cout << "MalUnpack: v." << versionStr << std::endl;
-            std::cout << "MalUnpackCompanion: "<<  getDriverInfo() << std::endl;
+            std::cout << "MalUnpackCompanion: "<<  getDriverInfo(true) << std::endl;
         }
     }
 
 protected:
-    std::string getDriverInfo()
+    std::string getDriverInfo(bool showNodes)
     {
+        ULONGLONG nodesCount = 0;
+        ULONGLONG *nodesCountPtr = &nodesCount;
         char buf[100] = { 0 };
-        driver::DriverStatus status = driver::get_version(buf, _countof(buf));
+        if (!showNodes) {
+            nodesCountPtr = nullptr;
+        }
+
+        driver::DriverStatus status = driver::get_version(buf, _countof(buf), nodesCountPtr);
 
         switch (status) {
         case driver::DriverStatus::DRIVER_UNAVAILABLE:
@@ -236,7 +270,12 @@ protected:
             return "ERROR - driver not responding";
         case driver::DriverStatus::DRIVER_OK:
             if (buf) {
-                return "v." + std::string(buf);
+                std::stringstream ss;
+                ss << "v." << std::string(buf);
+                if (showNodes) {
+                    ss << " (active sessions: " << std::dec << nodesCount << ")";
+                }
+                return ss.str();
             }
         default:
             return "could not fetch the version";

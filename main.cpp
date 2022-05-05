@@ -124,9 +124,9 @@ int main(int argc, char* argv[])
     t_pesieve_res ret_code = PESIEVE_ERROR;
     const DWORD flags = DETACHED_PROCESS | CREATE_NO_WINDOW;
 
-    ULONGLONG file_id;
+    ULONGLONG file_id = FILE_INVALID_FILE_ID;
     bool is_img_diff = get_watched_file_id(params, file_id);
-    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, file_id);
+    HANDLE proc = make_new_process(params.exe_path, params.exe_cmd, flags, file_id, params.noresp);
     if (!proc) {
         std::cerr << "Could not start the process!" << std::endl;
         return ret_code;
@@ -136,7 +136,8 @@ int main(int argc, char* argv[])
     std::wcout << "Module Path retrieved: " << params.hh_args.module_path << "\n";
     params.hh_args.start_pid = GetProcessId(proc);
 
-    std::string out_dir = make_dir_name(root_dir, time(NULL));
+    const time_t session_time = time(NULL);
+    std::string out_dir = make_dir_name(root_dir, session_time);
     set_output_dir(params.hh_args.pesieve_args, out_dir.c_str());
 
     ULONGLONG start_tick = GetTickCount64();
@@ -189,8 +190,7 @@ int main(int argc, char* argv[])
         std::cout << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds; " << count << " attempts." << std::endl;
         ret_code = PESIEVE_DETECTED;
     }
-
-    if (kill_pid(GetProcessId(proc))) {
+    if (kill_pid(params.hh_args.start_pid)) {
         std::cout << "[OK] The initial process got killed." << std::endl;
     }
     CloseHandle(proc);
@@ -198,6 +198,6 @@ int main(int argc, char* argv[])
     if (remaining > 0) {
         std::cout << "WARNING: " << remaining << " of the related processes are not killed" << std::endl;
     }
-    
+    scanner.deleteDroppedFiles(session_time);
     return ret_code;
 }

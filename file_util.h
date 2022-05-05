@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <set>
+#include <map>
 
 namespace file_util {
 
@@ -11,7 +12,7 @@ namespace file_util {
 
 	ULONGLONG get_file_id(const char* img_path);
 
-	size_t file_ids_to_names(std::set<LONGLONG>& filesIds, std::set<std::wstring> &names);
+	size_t file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGLONG, std::wstring> &names, DWORD name_type);
 
-	size_t delete_dropped_files(std::set<std::wstring>& names);
+	size_t delete_dropped_files(std::map<LONGLONG, std::wstring>& names, time_t timestamp, const std::wstring &suffix);
 }

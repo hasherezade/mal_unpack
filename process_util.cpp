@@ -6,7 +6,7 @@
 #include "pe-sieve\utils\ntddk.h"
 #include "driver_comm.h"
 
-HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags, IN OPTIONAL ULONGLONG file_id)
+HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags, IN OPTIONAL ULONGLONG file_id, IN OPTIONAL DWORD noresp)
 {
     static bool is_driver = driver::is_ready();
 
@@ -43,7 +43,7 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
         return NULL;
     }
     if (is_driver) {
-        if (driver::watch_pid(pi.dwProcessId, file_id)) {
+        if (driver::watch_pid(pi.dwProcessId, file_id, noresp)) {
             std::cout << "[*] The process: " << std::dec << pi.dwProcessId << " is watched by the driver" << "\n";
         }
         else {
@@ -59,11 +59,11 @@ HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATI
     return pi.hProcess;
 }
 
-HANDLE make_new_process(IN char* targetPath, IN char* cmdLine, IN DWORD flags, IN OPTIONAL ULONGLONG file_id)
+HANDLE make_new_process(IN char* targetPath, IN char* cmdLine, IN DWORD flags, IN OPTIONAL ULONGLONG file_id, IN OPTIONAL DWORD noresp)
 {
     //create target process:
     PROCESS_INFORMATION pi;
-    if (!create_new_process(targetPath, cmdLine, pi, flags, file_id)) {
+    if (!create_new_process(targetPath, cmdLine, pi, flags, file_id, noresp)) {
         return NULL;
     }
 #ifdef _DEBUG
