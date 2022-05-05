@@ -2,8 +2,6 @@
 
 #include <iostream>
 
-const USHORT MAX_PATH_LEN = 1024;
-
 struct ProcessDataBasic {
 	DWORD Pid;
 };
@@ -21,7 +19,7 @@ struct ProcessDataEx_v2 {
 
 struct ProcessFileData {
 	ULONG Pid;
-	WCHAR FileName[MAX_PATH_LEN];
+	WCHAR FileName[1]; //dynamic length
 };
 
 typedef ProcessDataEx_v2 ProcessDataEx;
@@ -90,22 +88,42 @@ namespace driver {
 		return success == TRUE ? true : false;
 	}
 
-	template<typename PROCESS_DATA>
-	bool request_action_on_pid(DWORD ioctl, PROCESS_DATA& data)
+	bool request_action(DWORD ioctl, void* data, size_t dataSize, DWORD &returned)
 	{
-		if (!ioctl || !data.Pid) {
-			return false;
-		}
 		HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 		if (hDevice == INVALID_HANDLE_VALUE) {
 			//std::cerr << "Failed to open device" << std::endl;
 			return false;
 		}
 		BOOL success = FALSE;
+		std::cout << "Passed buffer len: " << std::dec << dataSize << "\n";
+		success = DeviceIoControl(hDevice, ioctl, data, dataSize, nullptr, 0, &returned, nullptr);
+		CloseHandle(hDevice);
+		return success == TRUE ? true : false;
+	}
+
+	template<typename PROCESS_DATA>
+	bool request_action_on_pid(DWORD ioctl, PROCESS_DATA& data)
+	{
+		if (!ioctl || !data.Pid) {
+			return false;
+		}
 		DWORD returned = 0;
+		const size_t data_size = sizeof(PROCESS_DATA);
+		return request_action(ioctl, &data, data_size, returned);
+		/*HANDLE hDevice = CreateFileW(DRIVER_PATH, GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+		if (hDevice == INVALID_HANDLE_VALUE) {
+			//std::cerr << "Failed to open device" << std::endl;
+			return false;
+		}
+		BOOL success = FALSE;
+		DWORD returned = 0;
+
+		std::cout << "Passed buffer len: " << std::dec << buf_size << "\n";
 		success = DeviceIoControl(hDevice, ioctl, &data, sizeof(PROCESS_DATA), nullptr, 0, &returned, nullptr);
 		CloseHandle(hDevice);
 		return success == TRUE ? true : false;
+		*/
 	}
 };
 
@@ -229,17 +247,23 @@ bool driver::kill_watched_pid(DWORD pid)
 
 bool driver::delete_watched_file(DWORD pid, const std::wstring &filename)
 {
-	size_t filenameLen = filename.length();
-	if (!pid || !filenameLen) {
+	size_t filename_len = filename.length();
+	if (!pid || !filename_len) {
 		return false;
 	}
-	ProcessFileData data = { 0 };
-	data.Pid = pid;
-	size_t maxLen = MAX_PATH_LEN;
-	if (filenameLen < maxLen) {
-		maxLen = filenameLen;
+	const size_t filename_size = filename_len * sizeof(WCHAR);
+	const size_t full_size = sizeof(ProcessFileData) + (filename_size);
+	ProcessFileData* data = (ProcessFileData*)calloc(full_size, 1);
+	if (!data) {
+		return false;
 	}
-	::memcpy(data.FileName, filename.c_str(), maxLen*sizeof(WCHAR));
+	// fill with supplied data:
+	data->Pid = pid;
+	::memcpy(data->FileName, filename.c_str(), filename_size);
 
-	return driver::request_action_on_pid(IOCTL_MUNPACK_COMPANION_DELETE_WATCHED_FILE, data);
+	DWORD returned = 0;
+	bool is_ok = request_action(IOCTL_MUNPACK_COMPANION_DELETE_WATCHED_FILE, data, full_size, returned);
+
+	::free(data);
+	return is_ok;
 }
