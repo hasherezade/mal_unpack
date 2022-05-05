@@ -168,14 +168,16 @@ public:
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2, "R2", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2));
         }
 
-        EnumParam* norespParam = new EnumParam(PARAM_NORESPAWN, "respawn_protect", false);
-        if (norespParam) {
-            this->addParam(norespParam);
-            this->setInfo(PARAM_NORESPAWN, "protect against malware respawning after the unpacking session finished", 
-                std::string(INFO_SPACER) + "WARNING: this will cause your sample to be restricted by the driver\n");
-            norespParam->addEnumValue(t_noresp::NORESP_NO_RESTRICTION, "N", "disabled: allow the malware to be rerun freely [DEFAULT]");
-            norespParam->addEnumValue(t_noresp::NORESP_DROPPED_FILES, "D", "dropped files: block dropped files");
-            norespParam->addEnumValue(t_noresp::NORESP_ALL_FILES, "A", "all: block all associated files (including the main sample)");
+        if (driver::is_ready()) {
+            EnumParam* norespParam = new EnumParam(PARAM_NORESPAWN, "respawn_protect", false);
+            if (norespParam) {
+                this->addParam(norespParam);
+                this->setInfo(PARAM_NORESPAWN, "protect against malware respawning after the unpacking session finished",
+                    std::string(INFO_SPACER) + "WARNING: this will cause your sample to be restricted by the driver\n");
+                norespParam->addEnumValue(t_noresp::NORESP_NO_RESTRICTION, "N", "disabled: allow the malware to be rerun freely [DEFAULT]");
+                norespParam->addEnumValue(t_noresp::NORESP_DROPPED_FILES, "D", "dropped files: block dropped files");
+                norespParam->addEnumValue(t_noresp::NORESP_ALL_FILES, "A", "all: block all associated files (including the main sample)");
+            }
         }
 
         //optional: group parameters
