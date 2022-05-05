@@ -136,7 +136,8 @@ int main(int argc, char* argv[])
     std::wcout << "Module Path retrieved: " << params.hh_args.module_path << "\n";
     params.hh_args.start_pid = GetProcessId(proc);
 
-    std::string out_dir = make_dir_name(root_dir, time(NULL));
+    time_t session_time = time(NULL);
+    std::string out_dir = make_dir_name(root_dir, session_time);
     set_output_dir(params.hh_args.pesieve_args, out_dir.c_str());
 
     ULONGLONG start_tick = GetTickCount64();
@@ -197,6 +198,6 @@ int main(int argc, char* argv[])
     if (remaining > 0) {
         std::cout << "WARNING: " << remaining << " of the related processes are not killed" << std::endl;
     }
-    scanner.deleteDroppedFiles();
+    scanner.deleteDroppedFiles(session_time);
     return ret_code;
 }

@@ -57,7 +57,7 @@ public:
 
     size_t killRemaining();
 
-    size_t deleteDroppedFiles();
+    size_t deleteDroppedFiles(time_t attempt_time);
 
 protected:
     static size_t kill_pids(std::set<DWORD> &pids);

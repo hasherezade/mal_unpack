@@ -144,13 +144,13 @@ void print_file_names(const std::map<LONGLONG, std::wstring>&names)
     }
 }
 
-size_t UnpackScanner::deleteDroppedFiles()
+size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
 {
     const size_t all_files = allDroppedFiles.size();
     if (all_files == 0) {
         return 0; //nothing to deleteti
     }
-    
+
     std::cerr << "[INFO] Found dropped files:\n";
     std::map<LONGLONG,std::wstring> names;
     file_util::file_ids_to_names(allDroppedFiles, names, VOLUME_NAME_DOS);
@@ -161,8 +161,10 @@ size_t UnpackScanner::deleteDroppedFiles()
     DWORD attempts = 0;
     size_t deleted = 0;
     std::cerr << "[INFO] Trying to delete...\n";
+
     for (attempts = 0; remaining && (attempts < MAX_ATTEMPTS); attempts++) {
-        deleted += file_util::delete_dropped_files(names, this->unp_args.start_pid);
+
+        deleted += file_util::delete_dropped_files(names, this->unp_args.start_pid, session_time);
         remaining = all_names - deleted;
         if (remaining) {
 #ifdef _DEBUG

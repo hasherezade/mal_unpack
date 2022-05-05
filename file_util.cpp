@@ -3,6 +3,9 @@
 #include "ntddk.h"
 #include "driver_comm.h"
 
+#include <string>
+#include <sstream>
+
 namespace file_util {
 
 	const SIZE_T MAX_NT_PATH = (MAX_PATH * 2);
@@ -158,7 +161,7 @@ size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGL
 	return processed;
 }
 
-size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, DWORD ownerPid)
+size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, DWORD ownerPid, time_t timestamp)
 {
 	std::wstring suffix = L".unsafe";
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
@@ -191,8 +194,13 @@ size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, 
 				}
 			}
 		}
+		std::wstringstream ss;
+		ss << std::wstring(file_name)
+			<< "." << timestamp
+			<< suffix;
+
 		const std::wstring new_name = std::wstring(file_name) + suffix;
-		if (MoveFileExW(file_name.c_str(), new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
+		if (MoveFileExW(file_name.c_str(), ss.str().c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
 			isMoved = true;
 		}
 		if (DeleteFileW(new_name.c_str())) {
