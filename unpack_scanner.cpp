@@ -153,7 +153,7 @@ size_t UnpackScanner::deleteDroppedFiles()
     
     std::cerr << "[INFO] Found dropped files:\n";
     std::map<LONGLONG,std::wstring> names;
-    file_util::file_ids_to_names(allDroppedFiles, names);
+    file_util::file_ids_to_names(allDroppedFiles, names, VOLUME_NAME_DOS);
     print_file_names(names);
     const size_t all_names = names.size();
 

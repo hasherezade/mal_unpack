@@ -34,7 +34,7 @@ namespace file_util {
 		return NtOpenFile(&RootHandle, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &Attributes, &Io, FILE_SHARE_READ, FILE_OPEN);
 	}
 
-	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist)
+	bool get_file_path_by_id(HANDLE volumeHndl, LONGLONG file_id, LPWSTR file_name_buf, const DWORD file_name_len, bool &file_exist, DWORD path_type = VOLUME_NAME_DOS)
 	{
 		FILE_ID_DESCRIPTOR FileDesc = { 0 };
 		FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -49,7 +49,7 @@ namespace file_util {
 			return false;
 		}
 		file_exist = true;
-		DWORD got_len = GetFinalPathNameByHandleW(hFile, file_name_buf, file_name_len, VOLUME_NAME_DOS);
+		DWORD got_len = GetFinalPathNameByHandleW(hFile, file_name_buf, file_name_len, path_type);
 		NtClose(hFile);
 		return (got_len != 0) ? true: false;
 	}
@@ -127,7 +127,7 @@ ULONGLONG file_util::get_file_id(const char* img_path)
 	return FILE_INVALID_FILE_ID;
 }
 
-size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGLONG, std::wstring>& names)
+size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGLONG, std::wstring>& names, DWORD name_type)
 {
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -145,7 +145,7 @@ size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGL
 		LONGLONG fileId = *itr;
 
 		bool file_exist = true;
-		const bool gotName = get_file_path_by_id(volumeHndl, fileId, file_name, MAX_PATH, file_exist);
+		const bool gotName = get_file_path_by_id(volumeHndl, fileId, file_name, MAX_PATH, file_exist, name_type);
 		if (!gotName) {
 			if (file_exist) {
 				std::cerr << "Failed to retrieve the name of the file with the ID: " << std::hex << FileDesc.FileId.QuadPart << "\n";
@@ -173,14 +173,23 @@ size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, 
 	size_t processed = 0;
 	std::map<LONGLONG, std::wstring>::iterator itr = names.begin();
 
+	WCHAR nt_path[1024] = { 0 };
 	for (itr = names.begin(); itr != names.end(); ) {
 		const LONGLONG fileId = itr->first;
 		const std::wstring file_name = itr->second;
 		bool isDeleted = false;
 		bool isMoved = false;
-		if (driver::delete_watched_file(ownerPid, file_name)) {
-			std::cout << "Deleted by the driver\n";
-			isDeleted = true;
+		bool isExist = false;
+		if (get_file_path_by_id(volumeHndl, fileId, nt_path, _countof(nt_path), isExist, VOLUME_NAME_NT)) {
+			if (!isExist) {
+				isDeleted = true;
+			}
+			else {
+				if (driver::delete_watched_file(ownerPid, nt_path)) {
+					std::cout << "Deleted by the driver\n";
+					isDeleted = true;
+				}
+			}
 		}
 		const std::wstring new_name = std::wstring(file_name) + suffix;
 		if (MoveFileExW(file_name.c_str(), new_name.c_str(), MOVEFILE_WRITE_THROUGH | MOVEFILE_REPLACE_EXISTING)) {
