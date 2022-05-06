@@ -92,7 +92,7 @@ std::wstring file_util::get_file_path(IN const char* file_name)
 {
 	wchar_t full_path[MAX_PATH] = { 0 };
 
-	HANDLE hFile = CreateFileA(file_name, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	HANDLE hFile = CreateFileA(file_name, SYNCHRONIZE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 	DWORD got_len = GetFinalPathNameByHandleW(hFile, full_path, MAX_PATH, VOLUME_NAME_DOS);
 	CloseHandle(hFile);
 
@@ -115,7 +115,7 @@ std::wstring file_util::get_file_path(IN const char* file_name)
 
 ULONGLONG file_util::get_file_id(IN const char* img_path)
 {
-	HANDLE file = CreateFileA(img_path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+	HANDLE file = CreateFileA(img_path, SYNCHRONIZE | FILE_READ_ATTRIBUTES, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 
 	LONGLONG FileId = FILE_INVALID_FILE_ID;
 	NTSTATUS status = FetchFileId(file, FileId);
