@@ -55,7 +55,7 @@ void save_remaing_files_report(const std::wstring file_name, const time_t& sessi
     report << "Failed to delete files (" << std::dec << names.size() << "):\n";
     std::map<LONGLONG, std::wstring>::const_iterator itr;
     for (itr = names.begin(); itr != names.end(); ++itr) {
-        report << "> " << itr->second << "\n";
+        report << "> \"" << itr->second << "\"\n";
     }
     report.close();
 }
