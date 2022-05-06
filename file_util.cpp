@@ -88,8 +88,7 @@ namespace file_util {
 	}
 };
 
-
-std::wstring file_util::get_file_path(const char* file_name)
+std::wstring file_util::get_file_path(IN const char* file_name)
 {
 	wchar_t full_path[MAX_PATH] = { 0 };
 
@@ -114,7 +113,7 @@ std::wstring file_util::get_file_path(const char* file_name)
 	return full_path;
 }
 
-ULONGLONG file_util::get_file_id(const char* img_path)
+ULONGLONG file_util::get_file_id(IN const char* img_path)
 {
 	HANDLE file = CreateFileA(img_path, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 
@@ -129,7 +128,7 @@ ULONGLONG file_util::get_file_id(const char* img_path)
 	return FILE_INVALID_FILE_ID;
 }
 
-size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGLONG, std::wstring>& names, DWORD name_type)
+size_t file_util::file_ids_to_names(IN std::set<LONGLONG>& filesIds, OUT std::map<LONGLONG, std::wstring>& names, IN OPTIONAL DWORD name_type)
 {
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
@@ -160,7 +159,7 @@ size_t file_util::file_ids_to_names(std::set<LONGLONG>& filesIds, std::map<LONGL
 	return processed;
 }
 
-size_t file_util::delete_dropped_files(std::map<LONGLONG, std::wstring>& names, time_t timestamp, const std::wstring &suffix)
+size_t file_util::delete_dropped_files(IN OUT std::map<LONGLONG, std::wstring>& names, IN time_t timestamp, IN const std::wstring &suffix)
 {
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
