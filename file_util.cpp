@@ -159,16 +159,15 @@ size_t file_util::file_ids_to_names(IN std::set<LONGLONG>& filesIds, OUT std::ma
 	return processed;
 }
 
-size_t file_util::delete_dropped_files(IN OUT std::map<LONGLONG, std::wstring>& names, IN time_t timestamp, IN const std::wstring &suffix)
+file_util::delete_results file_util::delete_or_move_files(IN OUT std::map<LONGLONG, std::wstring>& names, IN time_t timestamp, IN const std::wstring &suffix)
 {
+	delete_results results = { 0 };
 	FILE_ID_DESCRIPTOR FileDesc = { 0 };
 	FileDesc.dwSize = sizeof(FILE_ID_DESCRIPTOR);
 	FileDesc.Type = FileIdType;
 
-	size_t processed = 0;
 	std::map<LONGLONG, std::wstring>::iterator itr = names.begin();
 
-	WCHAR nt_path[1024] = { 0 };
 	for (itr = names.begin(); itr != names.end(); ) {
 		const LONGLONG fileId = itr->first;
 		const std::wstring file_name = itr->second;
@@ -186,6 +185,12 @@ size_t file_util::delete_dropped_files(IN OUT std::map<LONGLONG, std::wstring>& 
 		}
 		if (DeleteFileW(new_name.c_str())) {
 			isDeleted = true;
+			results.deleted_count++;
+		}
+		else {
+			if (isMoved) {
+				results.moved_count++;
+			}
 		}
 		if (isDeleted || isMoved) {
 			std::wcout << "File: " << file_name;
@@ -198,10 +203,9 @@ size_t file_util::delete_dropped_files(IN OUT std::map<LONGLONG, std::wstring>& 
 			std::map<LONGLONG, std::wstring>::iterator curr_itr = itr;
 			++itr;
 			names.erase(curr_itr);
-			processed++;
 			continue;
 		}
 		++itr;
 	}
-	return processed;
+	return results;
 }

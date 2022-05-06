@@ -161,13 +161,16 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     const size_t all_names = dos_names.size();
 
     size_t remaining = all_names;
-    DWORD attempts = 0;
-    size_t neutralized = 0;
+    size_t deleted_total = 0;
+    size_t moved_total = 0;
 
     std::cout << "[INFO] Trying to delete in usermode...\n";
+    DWORD attempts = 0;
     for (attempts = 0; remaining && (attempts < MAX_ATTEMPTS); attempts++) {
-        neutralized += file_util::delete_dropped_files(dos_names, session_time, RENAMED_EXTENSION);
-        remaining = all_names - neutralized;
+        file_util::delete_results results = file_util::delete_or_move_files(dos_names, session_time, RENAMED_EXTENSION);
+        deleted_total += results.deleted_count;
+        moved_total += results.moved_count;
+        remaining = all_names - deleted_total;
         if (remaining) {
 #ifdef _DEBUG
             std::cerr << "[WARNING] Some dropped files are not deleted, retrying...\n";
@@ -175,18 +178,23 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
             Sleep(WAIT_FOR_PROCESSES * attempts);
         }
     }
-    std::cout << "[INFO] Total deleted: " << std::dec << neutralized << " (out of " << all_names << ") dropped files in " << attempts << " attempts.\n";
+    const size_t neutralized = deleted_total + moved_total;
+    std::cout << "[INFO] Total deleted: " << std::dec << deleted_total << " (out of " << all_names << ") dropped files in " << attempts << " attempts.\n";
     if (!remaining) {
         std::cout << "[OK] All dropped files are deleted!\n";
         return 0;
     }
-
+    
+    // Even if some files were neutralized by renaming, still try to delete them by the driver.
+    // Deletion by the driver may not work if session already ended, as in: t_noresp::NORESP_NO_RESTRICTION.
+    // Depending on the settings, driver may accept the files with the ".unsafe" extension as successfuly neutralized, 
+    // even if deleting has failed (for other reason than finished session)
     std::cout << "[INFO] Trying to delete by the driver...\n";
     std::map<LONGLONG, std::wstring> nt_names;
     file_util::file_ids_to_names(allDroppedFiles, nt_names, VOLUME_NAME_NT);
-    neutralized += driver::delete_dropped_files_by_driver(nt_names, this->unp_args.start_pid);
-    remaining = all_names - neutralized;
-    if (!remaining) {
+    size_t deleted_or_moved = driver::delete_dropped_files_by_driver(nt_names, this->unp_args.start_pid);
+    remaining = all_names - (deleted_total + deleted_or_moved);
+    if (!remaining || !(all_names - neutralized)) {
         std::cout << "[OK] All dropped files are deleted or renamed!\n";
     }
     else {
