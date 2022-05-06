@@ -42,19 +42,20 @@ void save_unpack_report(const std::string file_name, const time_t &session_times
 
 void save_remaing_files_report(const std::wstring file_name, const time_t& session_timestamp, UnpackScanner& scanner)
 {
+    std::map<LONGLONG, std::wstring> names;
+    if (scanner.listExistingDroppedFiles(names)) {
+        return;
+    }
     std::wofstream report;
     std::string report_name = LOG_FILE_NAME;
     report.open(report_name, std::ofstream::out | std::ofstream::app);
     report << "[" << session_timestamp << "] ";
     report << file_name << " : ";
 
-    std::map<LONGLONG, std::wstring> names;
-    if (scanner.listExistingDroppedFiles(names)) {
-        report << "Failed to delete files (" << std::dec << names.size() << "):";
-        std::map<LONGLONG, std::wstring>::const_iterator itr;
-        for (itr = names.begin(); itr != names.end(); ++itr) {
-            report << "> " << itr->second << "\n";
-        }
+    report << "Failed to delete files (" << std::dec << names.size() << "):";
+    std::map<LONGLONG, std::wstring>::const_iterator itr;
+    for (itr = names.begin(); itr != names.end(); ++itr) {
+        report << "> " << itr->second << "\n";
     }
     report.close();
 }
