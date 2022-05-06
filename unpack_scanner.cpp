@@ -180,8 +180,6 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
         std::cout << "[OK] All dropped files are deleted!\n";
         return 0;
     }
-    std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
-    std::wcerr << filenames_to_string(dos_names);
 
     std::cout << "[INFO] Trying to delete by the driver...\n";
     std::map<LONGLONG, std::wstring> nt_names;
