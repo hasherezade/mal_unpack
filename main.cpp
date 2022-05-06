@@ -32,7 +32,7 @@ void save_unpack_report(const std::string file_name, const time_t &session_times
     report << "[" << session_timestamp << "] ";
     report << file_name << " : ";
     if (finalStats.detected) {
-        report << "Unpacked in: " << std::dec << finalStats.scanTime << " ms.\n";
+        report << "Unpacked in: " << std::dec << finalStats.scanTime << " ms\n";
     }
     else {
         report << "Failed to unpack\n";
@@ -43,7 +43,7 @@ void save_unpack_report(const std::string file_name, const time_t &session_times
 void save_remaing_files_report(const std::wstring file_name, const time_t& session_timestamp, UnpackScanner& scanner)
 {
     std::map<LONGLONG, std::wstring> names;
-    if (scanner.listExistingDroppedFiles(names)) {
+    if (!scanner.listExistingDroppedFiles(names)) {
         return;
     }
     std::wofstream report;
@@ -52,7 +52,7 @@ void save_remaing_files_report(const std::wstring file_name, const time_t& sessi
     report << "[" << session_timestamp << "] ";
     report << file_name << " : ";
 
-    report << "Failed to delete files (" << std::dec << names.size() << "):";
+    report << "Failed to delete files (" << std::dec << names.size() << "):\n";
     std::map<LONGLONG, std::wstring>::const_iterator itr;
     for (itr = names.begin(); itr != names.end(); ++itr) {
         report << "> " << itr->second << "\n";
