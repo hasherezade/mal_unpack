@@ -22,12 +22,14 @@
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
 #define VERSION VER_FILEVERSION_STR
+#define LOG_FILE_NAME "unpack.log"
 
-void save_report(std::string file_name, ScanStats &finalStats)
+void save_unpack_report(const std::string file_name, const ScanStats &finalStats, const time_t &session_timestamp)
 {
     std::ofstream report;
-    std::string report_name = "unpack.log";
+    std::string report_name = LOG_FILE_NAME;
     report.open(report_name, std::ofstream::out | std::ofstream::app);
+    report << "[" << session_timestamp << "] ";
     report << file_name << " : ";
     if (finalStats.detected) {
         report << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds\n";
@@ -136,8 +138,8 @@ int main(int argc, char* argv[])
     std::wcout << "Module Path retrieved: " << params.hh_args.module_path << "\n";
     params.hh_args.start_pid = GetProcessId(proc);
 
-    const time_t session_time = time(NULL);
-    std::string out_dir = make_dir_name(root_dir, session_time);
+    const time_t session_timestamp = time(NULL);
+    std::string out_dir = make_dir_name(root_dir, session_timestamp);
     set_output_dir(params.hh_args.pesieve_args, out_dir.c_str());
 
     ULONGLONG start_tick = GetTickCount64();
@@ -184,7 +186,7 @@ int main(int argc, char* argv[])
         std::cout << "The process dropped some files!\n";
     }
 
-    save_report(file_name, finalStats);
+    save_unpack_report(file_name, finalStats, session_timestamp);
 
     if (is_unpacked) {
         std::cout << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds; " << count << " attempts." << std::endl;
@@ -194,10 +196,15 @@ int main(int argc, char* argv[])
         std::cout << "[OK] The initial process got killed." << std::endl;
     }
     CloseHandle(proc);
+
     size_t remaining = scanner.killRemaining();
     if (remaining > 0) {
-        std::cout << "WARNING: " << remaining << " of the related processes are not killed" << std::endl;
+        std::cerr << "WARNING: " << remaining << " of the related processes are not killed" << std::endl;
     }
-    scanner.deleteDroppedFiles(session_time);
+    if (scanner.deleteDroppedFiles(session_timestamp) > 0) {
+        if (params.noresp != t_noresp::NORESP_NO_RESTRICTION) {
+            std::cerr << "WARNING: The session will remain active as long as the dropped files are not deleted!" << std::endl;
+        }
+    }
     return ret_code;
 }

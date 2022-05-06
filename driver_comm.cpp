@@ -264,18 +264,18 @@ size_t driver::delete_dropped_files_by_driver(std::map<LONGLONG, std::wstring>& 
 		const LONGLONG fileId = itr->first;
 		const std::wstring file_name = itr->second;
 
-		bool isDeleted = false;
+		bool isDeletedOrRenamed = false;
 		if (driver::delete_watched_file(ownerPid, file_name)) {
-			isDeleted = true;
+			isDeletedOrRenamed = true;
 		}
 		
-		if (isDeleted) {
+		if (isDeletedOrRenamed) {
 			std::wcout << "File: " << file_name;
-			if (isDeleted) std::cout << " [DELETED]";
+			if (isDeletedOrRenamed) std::cout << " [OK]";
 			std::wcout << "\n";
 		}
 		//erase the name from the list:
-		if (isDeleted) {
+		if (isDeletedOrRenamed) {
 			std::map<LONGLONG, std::wstring>::iterator curr_itr = itr;
 			++itr;
 			nt_names.erase(curr_itr);

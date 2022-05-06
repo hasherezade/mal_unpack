@@ -53,11 +53,11 @@ public:
         return stats;
     }
 
-    size_t collectDroppedFiles(ULONGLONG skipId);
-
     size_t killRemaining();
 
+    size_t collectDroppedFiles(ULONGLONG skipId);
     size_t deleteDroppedFiles(time_t attempt_time);
+    size_t listExistingDroppedFiles(std::map<LONGLONG, std::wstring>& names);
 
 protected:
     static size_t kill_pids(std::set<DWORD> &pids);
