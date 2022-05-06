@@ -263,8 +263,8 @@ size_t driver::delete_dropped_files_by_driver(std::map<LONGLONG, std::wstring>& 
 	for (itr = nt_names.begin(); itr != nt_names.end(); ) {
 		const LONGLONG fileId = itr->first;
 		const std::wstring file_name = itr->second;
-		bool isDeleted = false;
 
+		bool isDeleted = false;
 		if (driver::delete_watched_file(ownerPid, file_name)) {
 			isDeleted = true;
 		}

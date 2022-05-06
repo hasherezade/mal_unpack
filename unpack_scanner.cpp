@@ -1,7 +1,8 @@
 #include "unpack_scanner.h"
 
 #include <iostream>
-#include <string.h>
+#include <string>
+#include <sstream>
 
 #include "process_util.h"
 #include "driver_comm.h"
@@ -136,12 +137,14 @@ size_t UnpackScanner::collectDroppedFiles(ULONGLONG skipId)
     return allDroppedFiles.size();
 }
 
-void print_file_names(const std::map<LONGLONG, std::wstring>&names)
+std::wstring filenames_to_string(const std::map<LONGLONG, std::wstring>&names)
 {
+    std::wstringstream ss;
     std::map<LONGLONG, std::wstring>::const_iterator itr;
     for (itr = names.begin(); itr != names.end(); ++itr) {
-        std::wcout << "File: " << itr->second << "\n";
+        ss << "File: " << itr->second << "\n";
     }
+    return ss.str();
 }
 
 size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
@@ -151,16 +154,16 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
         return 0; //nothing to deleteti
     }
 
-    std::cerr << "[INFO] Found dropped files:\n";
+    std::cout << "[INFO] Found dropped files:\n";
     std::map<LONGLONG, std::wstring> dos_names;
     file_util::file_ids_to_names(allDroppedFiles, dos_names, VOLUME_NAME_DOS);
-    print_file_names(dos_names);
+    std::wcout << filenames_to_string(dos_names);
     const size_t all_names = dos_names.size();
 
     size_t remaining = all_names;
     DWORD attempts = 0;
     size_t deleted = 0;
-    std::cerr << "[INFO] Trying to delete in usermode...\n";
+    std::cout << "[INFO] Trying to delete in usermode...\n";
 
     for (attempts = 0; remaining && (attempts < MAX_ATTEMPTS); attempts++) {
         deleted += file_util::delete_dropped_files(dos_names, session_time, RENAMED_EXTENSION);
@@ -172,10 +175,10 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
             Sleep(WAIT_FOR_PROCESSES * attempts);
         }
     }
-    std::cerr << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_names << ") dropped files in " << attempts << " attempts\n";
+    std::cout << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_names << ") dropped files in " << attempts << " attempts\n";
     if (remaining) {
         std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
-        print_file_names(dos_names);
+        std::wcerr << filenames_to_string(dos_names);
     }
     else {
         std::cout << "[OK] All dropped files are deleted!\n";
@@ -183,16 +186,16 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     if (!remaining) {
         return 0;
     }
-    std::cerr << "[INFO] Trying to delete by the driver...\n";
+    std::cout << "[INFO] Trying to delete by the driver...\n";
     std::map<LONGLONG, std::wstring> nt_names;
     file_util::file_ids_to_names(allDroppedFiles, nt_names, VOLUME_NAME_NT);
     deleted += driver::delete_dropped_files_by_driver(nt_names, this->unp_args.start_pid);
     remaining = all_names - deleted;
 
-    std::cerr << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_names << ") dropped files in " << attempts << " attempts\n";
+    std::cout << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_names << ") dropped files in " << attempts << " attempts\n";
     if (remaining) {
         std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
-        print_file_names(nt_names);
+        std::wcerr << filenames_to_string(nt_names);
     }
     else {
         std::cout << "[OK] All dropped files are deleted!\n";
