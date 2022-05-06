@@ -118,7 +118,10 @@ bool kill_pid(DWORD pid)
 #ifdef _DEBUG
     std::cout << "[!] Killing PID: " << std::dec << pid << std::endl;
 #endif
-    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE | PROCESS_SET_INFORMATION, FALSE, pid);
+    if (!hProcess) {
+        hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
+    }
     if (!hProcess) {
         const DWORD err = GetLastError();
         if (err == ERROR_INVALID_PARAMETER) {
@@ -126,6 +129,12 @@ bool kill_pid(DWORD pid)
         }
         return false;
     }
+    // try to set process as non-critical before killing:
+    ULONG IsCritical = 0;
+    const NTSTATUS status = NtSetInformationProcess(hProcess, ProcessBreakOnTermination, &IsCritical, sizeof(ULONG));
+#ifdef _DEBUG
+    std::cout << " NtSetInformationProcess , status: " << std::hex << status << std::endl;
+#endif
     bool is_killed = false;
     if (TerminateProcess(hProcess, 0)) {
         is_killed = true;
