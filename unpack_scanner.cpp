@@ -151,7 +151,7 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
 {
     const size_t all_files = allDroppedFiles.size();
     if (all_files == 0) {
-        return 0; //nothing to deleteti
+        return 0; //nothing to delete
     }
 
     std::cout << "[INFO] Found dropped files:\n";
@@ -163,8 +163,8 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     size_t remaining = all_names;
     DWORD attempts = 0;
     size_t deleted = 0;
-    std::cout << "[INFO] Trying to delete in usermode...\n";
 
+    std::cout << "[INFO] Trying to delete in usermode...\n";
     for (attempts = 0; remaining && (attempts < MAX_ATTEMPTS); attempts++) {
         deleted += file_util::delete_dropped_files(dos_names, session_time, RENAMED_EXTENSION);
         remaining = all_names - deleted;
@@ -176,31 +176,32 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
         }
     }
     std::cout << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_names << ") dropped files in " << attempts << " attempts\n";
-    if (remaining) {
-        std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
-        std::wcerr << filenames_to_string(dos_names);
-    }
-    else {
-        std::cout << "[OK] All dropped files are deleted!\n";
-    }
     if (!remaining) {
+        std::cout << "[OK] All dropped files are deleted!\n";
         return 0;
     }
+    std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
+    std::wcerr << filenames_to_string(dos_names);
+
     std::cout << "[INFO] Trying to delete by the driver...\n";
     std::map<LONGLONG, std::wstring> nt_names;
     file_util::file_ids_to_names(allDroppedFiles, nt_names, VOLUME_NAME_NT);
     deleted += driver::delete_dropped_files_by_driver(nt_names, this->unp_args.start_pid);
     remaining = all_names - deleted;
 
-    std::cout << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_names << ") dropped files in " << attempts << " attempts\n";
-    if (remaining) {
-        std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
-        std::wcerr << filenames_to_string(nt_names);
-    }
-    else {
+    std::cout << "[INFO] Deleted : " << std::dec << deleted << " (out of " << all_names << ") dropped files\n";
+    if (!remaining) {
         std::cout << "[OK] All dropped files are deleted!\n";
+        return 0;
     }
-    return remaining;
+
+    std::map<LONGLONG, std::wstring> remaining_names;
+    file_util::file_ids_to_names(allDroppedFiles, remaining_names, VOLUME_NAME_DOS);
+    if (remaining_names.size()) {
+        std::cerr << "[WARNING] Not all dropped files are deleted. Failed:\n";
+        std::wcerr << filenames_to_string(remaining_names);
+    }
+    return remaining_names.size();
 }
 
 
