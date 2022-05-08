@@ -25,6 +25,8 @@ namespace driver {
 
 	bool kill_watched_pid(DWORD pid);
 
+	bool is_session_open(DWORD pid, DWORD &session_status);
+
 	bool delete_watched_file(DWORD pid, const std::wstring& filename);
 
 	size_t delete_dropped_files_by_driver(std::map<LONGLONG, std::wstring>& nt_names, DWORD ownerPid);

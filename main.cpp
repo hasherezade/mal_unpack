@@ -226,7 +226,6 @@ int main(int argc, char* argv[])
             std::cerr << "WARNING: The session will remain active as long as the dropped files are not deleted!" << std::endl;
         }
     }
-    
     std::wstring filenameW(file_name.begin(), file_name.end());
     save_remaing_files_report(filenameW, session_timestamp, scanner);
     return ret_code;

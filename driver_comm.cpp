@@ -48,6 +48,8 @@ typedef ProcessDataEx_v2 ProcessDataEx;
 #define IOCTL_MUNPACK_COMPANION_DELETE_WATCHED_FILE CTL_CODE(MUNPACK_COMPANION_DEVICE, \
 	0x807, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+#define IOCTL_MUNPACK_COMPANION_CONTAINS_NODE CTL_CODE(MUNPACK_COMPANION_DEVICE, \
+	0x808, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 namespace driver {
 
@@ -253,6 +255,16 @@ bool driver::delete_watched_file(DWORD pid, const std::wstring &filename)
 
 	::free(data);
 	return is_ok;
+}
+
+bool driver::is_session_open(DWORD rootPID, DWORD& session_status)
+{
+	static bool isReady = is_ready();
+	if (!isReady) {
+		return false;
+	}
+	const bool isOK = fetch_watched_elements(IOCTL_MUNPACK_COMPANION_CONTAINS_NODE, rootPID, &session_status, 1);
+	return isOK;
 }
 
 size_t driver::delete_dropped_files_by_driver(std::map<LONGLONG, std::wstring>& nt_names, DWORD ownerPid)

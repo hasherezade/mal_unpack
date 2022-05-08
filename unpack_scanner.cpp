@@ -208,6 +208,12 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     return remaining;
 }
 
+UnpackScanner::t_session_status UnpackScanner::fetchSessionStatus()
+{
+    DWORD session_status = (DWORD)t_session_status::DriverNotLoaded;
+    return (t_session_status)driver::is_session_open(this->unp_args.start_pid, session_status);
+}
+
 size_t UnpackScanner::listExistingDroppedFiles(std::map<LONGLONG, std::wstring> &names)
 {
     file_util::file_ids_to_names(allDroppedFiles, names, VOLUME_NAME_DOS);
