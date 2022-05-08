@@ -24,17 +24,30 @@
 #define VERSION VER_FILEVERSION_STR
 #define LOG_FILE_NAME "unpack.log"
 
+void print_log_hdr(std::wofstream &report, const time_t& session_timestamp, const t_params_struct& params)
+{
+    report << "[" << session_timestamp << "] ";
+
+    const char* exe_name = get_file_name(params.exe_path);
+    const char* img_name = get_file_name(params.img_path);
+    if (exe_name) {
+        report << exe_name;
+    }
+    if (img_name && exe_name && 
+        strlen(img_name) && strcmp(img_name, exe_name) != 0)
+    {
+        report << " (" << img_name << ")";
+    }
+    report << " : ";
+}
+
 void save_unpack_report(const time_t &session_timestamp, t_params_struct &params, const ScanStats& finalStats)
 {
     std::wofstream report;
     std::string report_name = LOG_FILE_NAME;
     report.open(report_name, std::ofstream::out | std::ofstream::app);
-    report << "[" << session_timestamp << "] ";
-    report << params.exe_path;
-    if (strnlen(params.img_path, MAX_PATH) && strncmp(params.img_path,params.exe_path, MAX_PATH) != 0) {
-        report << " (" << params.img_path << ")";
-    }
-    report << " : ";
+    print_log_hdr(report, session_timestamp, params);
+
     if (finalStats.detected) {
         report << "Unpacked in: " << std::dec << finalStats.scanTime << " ms\n";
     }
@@ -50,15 +63,11 @@ void save_remaing_files_report(const time_t& session_timestamp, t_params_struct&
     if (!scanner.listExistingDroppedFiles(names)) {
         return;
     }
+
     std::wofstream report;
     std::string report_name = LOG_FILE_NAME;
     report.open(report_name, std::ofstream::out | std::ofstream::app);
-    report << "[" << session_timestamp << "] ";
-    report << params.exe_path;
-    if (strnlen(params.img_path, MAX_PATH) && strncmp(params.img_path, params.exe_path, MAX_PATH) != 0) {
-        report << " (" << params.img_path << ")";
-    }
-    report << " : ";
+    print_log_hdr(report, session_timestamp, params);
 
     report << "Failed to delete files (" << std::dec << names.size() << "):\n";
     std::map<LONGLONG, std::wstring>::const_iterator itr;
