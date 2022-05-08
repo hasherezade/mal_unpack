@@ -24,13 +24,17 @@
 #define VERSION VER_FILEVERSION_STR
 #define LOG_FILE_NAME "unpack.log"
 
-void save_unpack_report(const std::string file_name, const time_t &session_timestamp, const ScanStats& finalStats)
+void save_unpack_report(const time_t &session_timestamp, t_params_struct &params, const ScanStats& finalStats)
 {
-    std::ofstream report;
+    std::wofstream report;
     std::string report_name = LOG_FILE_NAME;
     report.open(report_name, std::ofstream::out | std::ofstream::app);
     report << "[" << session_timestamp << "] ";
-    report << file_name << " : ";
+    report << params.exe_path;
+    if (strnlen(params.img_path, MAX_PATH) && strncmp(params.img_path,params.exe_path, MAX_PATH) != 0) {
+        report << " (" << params.img_path << ")";
+    }
+    report << " : ";
     if (finalStats.detected) {
         report << "Unpacked in: " << std::dec << finalStats.scanTime << " ms\n";
     }
@@ -40,7 +44,7 @@ void save_unpack_report(const std::string file_name, const time_t &session_times
     report.close();
 }
 
-void save_remaing_files_report(const std::wstring file_name, const time_t& session_timestamp, UnpackScanner& scanner)
+void save_remaing_files_report(const time_t& session_timestamp, t_params_struct& params, UnpackScanner& scanner)
 {
     std::map<LONGLONG, std::wstring> names;
     if (!scanner.listExistingDroppedFiles(names)) {
@@ -50,7 +54,11 @@ void save_remaing_files_report(const std::wstring file_name, const time_t& sessi
     std::string report_name = LOG_FILE_NAME;
     report.open(report_name, std::ofstream::out | std::ofstream::app);
     report << "[" << session_timestamp << "] ";
-    report << file_name << " : ";
+    report << params.exe_path;
+    if (strnlen(params.img_path, MAX_PATH) && strncmp(params.img_path, params.exe_path, MAX_PATH) != 0) {
+        report << " (" << params.img_path << ")";
+    }
+    report << " : ";
 
     report << "Failed to delete files (" << std::dec << names.size() << "):\n";
     std::map<LONGLONG, std::wstring>::const_iterator itr;
@@ -206,7 +214,7 @@ int main(int argc, char* argv[])
         std::cout << "The process dropped some files!\n";
     }
 
-    save_unpack_report(file_name, session_timestamp, finalStats);
+    save_unpack_report(session_timestamp, params, finalStats);
 
     if (is_unpacked) {
         std::cout << "Unpacked in: " << std::dec << finalStats.scanTime << " milliseconds; " << count << " attempts." << std::endl;
@@ -226,8 +234,6 @@ int main(int argc, char* argv[])
             std::cerr << "WARNING: The session will remain active as long as the dropped files are not deleted!" << std::endl;
         }
     }
-    
-    std::wstring filenameW(file_name.begin(), file_name.end());
-    save_remaing_files_report(filenameW, session_timestamp, scanner);
+    save_remaing_files_report(session_timestamp, params, scanner);
     return ret_code;
 }
