@@ -175,10 +175,10 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     if (rMgr.countAffectedApps() > 0) {
         rMgr.printList();
         if (rMgr.shutdownApps()) {
-            std::cout << "[*] RmSessionManager: Shutdown blocking apps successful!\n";
+            std::cout << "[*] RmSessionManager: Shutdown of blocking apps succeeded!\n";
         }
         else {
-            std::cout << "[!] RmSessionManager: Shutdown blocking apps failed!\n";
+            std::cout << "[!] RmSessionManager: Shutdown of blocking apps failed!\n";
         }
     }
 
