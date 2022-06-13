@@ -108,7 +108,7 @@ DWORD get_parent_pid(DWORD dwPID)
     return  (dwParentPID);
 }
 
-bool kill_pid(DWORD pid)
+bool kill_pid(DWORD pid, bool force_non_critical)
 {
     static bool is_driver = driver::is_ready();
     if (is_driver && driver::kill_watched_pid(pid)) {
@@ -131,10 +131,12 @@ bool kill_pid(DWORD pid)
     }
     // try to set process as non-critical before killing:
     ULONG IsCritical = 0;
-    const NTSTATUS status = NtSetInformationProcess(hProcess, ProcessBreakOnTermination, &IsCritical, sizeof(ULONG));
+    if (force_non_critical) {
+        const NTSTATUS status = NtSetInformationProcess(hProcess, ProcessBreakOnTermination, &IsCritical, sizeof(ULONG));
 #ifdef _DEBUG
-    std::cout << " NtSetInformationProcess , status: " << std::hex << status << std::endl;
+        std::cout << " NtSetInformationProcess , status: " << std::hex << status << std::endl;
 #endif
+    }
     bool is_killed = false;
     if (TerminateProcess(hProcess, 0)) {
         is_killed = true;
@@ -372,7 +374,6 @@ HMODULE search_module_by_name(IN HANDLE hProcess, IN const std::wstring& searche
     }
     return NULL;
 }
-
 
 bool is_module_in_process(DWORD pid, const wchar_t* dll_path)
 {

@@ -21,12 +21,14 @@ set (util_srcs
 	util/process_util.cpp
 	util/file_util.cpp
 	util/path_util.cpp
+	util/rm_util.cpp
 )
 
 set (util_hdrs
 	util/process_util.h
 	util/file_util.h
 	util/path_util.h
+	util/rm_util.h
 )
 
 set (srcs

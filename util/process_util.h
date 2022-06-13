@@ -14,7 +14,7 @@ HANDLE make_new_process(IN char* targetPath, IN char* cmdLine, IN DWORD flags, I
 
 DWORD get_parent_pid(DWORD my_pid);
 
-bool kill_pid(DWORD pid);
+bool kill_pid(DWORD pid, bool force_non_critical=true);
 
 bool set_debug_privilege();
 
