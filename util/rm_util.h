@@ -25,7 +25,6 @@ public:
         if (isInit) {
             return true;
         }
-        WCHAR sessKey[CCH_RM_SESSION_KEY + 1];
         if (RmStartSession(&dwSessionHandle, 0, sessKey) != ERROR_SUCCESS) {
             return false;
         }
@@ -83,6 +82,11 @@ public:
             RmEndSession(dwSessionHandle);
         }
     }
+    
+    UINT countAffectedApps()
+    {
+        return nAffectedApps;
+    }
 
 protected:
     bool isInit = false;
@@ -91,4 +95,5 @@ protected:
 
     UINT nAffectedApps = 0;
     RM_PROCESS_INFO* rgAffectedApps = NULL;
+    WCHAR sessKey[CCH_RM_SESSION_KEY + 1] = { 0 };
 };

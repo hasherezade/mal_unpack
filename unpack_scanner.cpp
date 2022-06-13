@@ -161,7 +161,6 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     std::wcout << filenames_to_string(dos_names);
     const size_t all_names = dos_names.size();
     const DWORD files_count = dos_names.size();
-    std::cout << "Filling names " << files_count << " \n";
 
     LPCWSTR* names = new LPCWSTR[files_count];
     DWORD i = 0;
@@ -170,18 +169,17 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     }
 
     RmSessionManager rMgr;
-    if (rMgr.populate(names, files_count)) {
-        std::cout << "[*] RmSessionManager populated!\n";
+    if (!rMgr.populate(names, files_count)) {
+        std::cout << "[!] RmSessionManager: Failed populating the list!\n";
     }
-    else {
-        std::cout << "[!] RmSessionManager populating failed!\n";
-    }
-    rMgr.printList();
-    if (rMgr.shutdownApps()) {
-        std::cout << "[*] RmSessionManager: Shutdown blocking apps successful!\n";
-    }
-    else {
-        std::cout << "[!] RmSessionManager: Shutdown blocking apps failed!\n";
+    if (rMgr.countAffectedApps() > 0) {
+        rMgr.printList();
+        if (rMgr.shutdownApps()) {
+            std::cout << "[*] RmSessionManager: Shutdown blocking apps successful!\n";
+        }
+        else {
+            std::cout << "[!] RmSessionManager: Shutdown blocking apps failed!\n";
+        }
     }
 
     size_t remaining = all_names;
