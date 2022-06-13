@@ -4,7 +4,7 @@
 using namespace paramkit;
 
 #include "unpack_scanner.h"
-#include "util.h"
+#include "util/path_util.h"
 #include "driver_comm.h"
 
 #define DEFAULT_TIMEOUT 1000
@@ -49,6 +49,19 @@ typedef struct {
     UnpackScanner::t_unp_params hh_args;
 } t_params_struct;
 
+
+std::string version_to_str(DWORD version)
+{
+    BYTE* chunks = (BYTE*)&version;
+    std::stringstream stream;
+    stream << std::hex <<
+        (int)chunks[3] << "." <<
+        (int)chunks[2] << "." <<
+        (int)chunks[1] << "." <<
+        (int)chunks[0];
+
+    return stream.str();
+}
 
 std::string translate_data_mode(const pesieve::t_data_scan_mode &mode)
 {

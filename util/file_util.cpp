@@ -1,6 +1,6 @@
 #include "file_util.h"
 
-#include "ntddk.h"
+#include "../ntddk.h"
 
 #include <string>
 #include <sstream>

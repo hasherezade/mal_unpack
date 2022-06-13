@@ -16,24 +16,32 @@ include_directories ( ${PESIEVE_DIR}/include )
 set (PARAMKIT_DIR "${PROJECT_SOURCE_DIR}/${M_PARAMKIT}/${M_PARAMKIT}" CACHE PATH "ParamKit main path")
 include_directories ( ${PARAMKIT_DIR}/include )
 
+
+set (util_srcs
+	util/process_util.cpp
+	util/file_util.cpp
+	util/path_util.cpp
+)
+
+set (util_hdrs
+	util/process_util.h
+	util/file_util.h
+	util/path_util.h
+)
+
 set (srcs
 	main.cpp
-	process_util.cpp
 	unpack_scanner.cpp
 	driver_comm.cpp
-	file_util.cpp
-	util.cpp
+	${util_srcs}
 )
 
 set (hdrs
-	process_util.h
 	unpack_scanner.h
 	driver_comm.h
-	file_util.h
 	ntddk.h
-	util.h
 	params.h
-	
+	${util_hdrs}
 )
 
 set (rsrc

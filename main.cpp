@@ -14,10 +14,11 @@
 #include <pe_sieve_return_codes.h>
 
 #include "unpack_scanner.h"
-#include "process_util.h"
-#include "util.h"
 #include "version.h"
-#include "file_util.h"
+
+#include "util/process_util.h"
+#include "util/path_util.h"
+#include "util/file_util.h"
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
@@ -110,6 +111,19 @@ bool get_watched_file_id(const t_params_struct& params, ULONGLONG &file_id)
     return is_diffrent;
 }
 
+bool set_output_dir(pesieve::t_params& args, const char* new_dir)
+{
+    if (!new_dir) return false;
+
+    size_t new_len = strlen(new_dir);
+    size_t buffer_len = sizeof(args.output_dir);
+    if (new_len > buffer_len) return false;
+
+    memset(args.output_dir, 0, buffer_len);
+    memcpy(args.output_dir, new_dir, new_len);
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
     UnpackParams uParams(VERSION);
@@ -176,7 +190,7 @@ int main(int argc, char* argv[])
     params.hh_args.start_pid = GetProcessId(proc);
 
     const time_t session_timestamp = time(NULL);
-    std::string out_dir = make_dir_name(root_dir, session_timestamp);
+    const std::string out_dir = make_dir_name(root_dir, session_timestamp, "scan_");
     set_output_dir(params.hh_args.pesieve_args, out_dir.c_str());
 
     ULONGLONG start_tick = GetTickCount64();

@@ -4,9 +4,9 @@
 #include <string>
 #include <sstream>
 
-#include "process_util.h"
+#include "util/process_util.h"
 #include "driver_comm.h"
-#include "file_util.h"
+#include "util/file_util.h"
 
 #define WAIT_FOR_PROCESSES 100
 #define MAX_ELEMENTS 1024
