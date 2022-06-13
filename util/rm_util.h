@@ -6,6 +6,8 @@
 
 #pragma comment(lib, "rstrtmgr.lib")
 
+#define INVALID_HANDLE_VALUE_DW (-1)
+
 struct RmSessionManager
 {
 public:
@@ -23,9 +25,12 @@ public:
         if (isInit) {
             return true;
         }
+        WCHAR sessKey[CCH_RM_SESSION_KEY + 1];
         if (RmStartSession(&dwSessionHandle, 0, sessKey) != ERROR_SUCCESS) {
+            std::cout << "session init failed\n";
             return false;
         }
+        std::cout << "session init OK: " << dwSessionHandle << "\n";
         isInit = true;
         return true;
     }
@@ -34,20 +39,28 @@ public:
 
     void printList()
     {
+        if (!rgAffectedApps) return;
+
         for (DWORD i = 0; i < nAffectedApps; ++i) {
             RM_PROCESS_INFO app = rgAffectedApps[i];
-            std::cout << "Blocking app: " << app.strAppName << "\n";
+            std::wcout << "Blocking app: " << app.strAppName << "\n";
         }
     }
 
     bool shutdownApps()
     {
-        if (ERROR_SUCCESS != RmShutdown(dwSessionHandle, 0, NULL))
+        DWORD res = RmShutdown(dwSessionHandle, RmForceShutdown, NULL);
+        if (ERROR_SUCCESS != res)
         {
-            return false;
+            std::cout << "shutdownApps failed: " << std::hex << res << "\n";
+            bool isOk = killAllApps();
+            std::cout << "kill apps result: " << isOk << "\n";
+            return isOk;
         }
         return true;
     }
+
+    bool killAllApps();
 
     bool restartApps()
     {
@@ -63,7 +76,7 @@ public:
         if (rgAffectedApps) {
             delete[] rgAffectedApps; rgAffectedApps = NULL;
         }
-        if (dwSessionHandle && dwSessionHandle != (DWORD)INVALID_HANDLE_VALUE) {
+        if (dwSessionHandle && dwSessionHandle != INVALID_HANDLE_VALUE_DW) {
             RmEndSession(dwSessionHandle);
         }
     }
@@ -71,8 +84,7 @@ public:
 protected:
     bool isInit = false;
 
-    WCHAR sessKey[CCH_RM_SESSION_KEY + 1] = { 0 };
-    DWORD dwSessionHandle = (DWORD)INVALID_HANDLE_VALUE;
+    DWORD dwSessionHandle = INVALID_HANDLE_VALUE_DW;
 
     UINT nAffectedApps = 0;
     RM_PROCESS_INFO* rgAffectedApps = NULL;

@@ -1,4 +1,5 @@
 #include "rm_util.h"
+#include "process_util.h"
 #include <iostream>
 
 //---
@@ -9,7 +10,7 @@ bool RmSessionManager::populate(LPCWSTR rgsFiles[], DWORD filesCount)
         return false; // already populated
     }
     if (!isInit) init(); // autoinit
-    if (!dwSessionHandle || dwSessionHandle == (DWORD)INVALID_HANDLE_VALUE) {
+    if (dwSessionHandle == INVALID_HANDLE_VALUE_DW) {
         return false; // not initialized
     }
 
@@ -30,7 +31,6 @@ bool RmSessionManager::populate(LPCWSTR rgsFiles[], DWORD filesCount)
 
     UINT nProcInfoNeeded = 0;
     RM_REBOOT_REASON dwRebootReasons = RmRebootReasonNone;
-    RM_PROCESS_INFO* rgAffectedApps = NULL;
     DWORD dwErrCode = ERROR_SUCCESS;
     do
     {
@@ -73,4 +73,17 @@ bool RmSessionManager::populate(LPCWSTR rgsFiles[], DWORD filesCount)
     } while ((ERROR_MORE_DATA == dwErrCode) && (nRetry++ < 3));
 
     return isSuccess;
+}
+
+
+bool RmSessionManager::killAllApps()
+{
+    if (!rgAffectedApps) return true;
+
+    size_t killed = 0;
+    for (DWORD i = 0; i < nAffectedApps; ++i) {
+        RM_PROCESS_INFO app = rgAffectedApps[i];
+        if (kill_pid(app.Process.dwProcessId)) killed++;
+    }
+    return (killed == nAffectedApps);
 }
