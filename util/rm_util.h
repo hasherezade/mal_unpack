@@ -27,10 +27,8 @@ public:
         }
         WCHAR sessKey[CCH_RM_SESSION_KEY + 1];
         if (RmStartSession(&dwSessionHandle, 0, sessKey) != ERROR_SUCCESS) {
-            std::cout << "session init failed\n";
             return false;
         }
-        std::cout << "session init OK: " << dwSessionHandle << "\n";
         isInit = true;
         return true;
     }
@@ -43,7 +41,7 @@ public:
 
         for (DWORD i = 0; i < nAffectedApps; ++i) {
             RM_PROCESS_INFO app = rgAffectedApps[i];
-            std::wcout << "Blocking app: " << app.strAppName << "\n";
+            std::wcout << "[*] Blocking app: " << app.strAppName << "\n";
         }
     }
 
@@ -52,9 +50,13 @@ public:
         DWORD res = RmShutdown(dwSessionHandle, RmForceShutdown, NULL);
         if (ERROR_SUCCESS != res)
         {
+#ifdef _DEBUG
             std::cout << "shutdownApps failed: " << std::hex << res << "\n";
+#endif
             bool isOk = killAllApps();
+#ifdef _DEBUG
             std::cout << "kill apps result: " << isOk << "\n";
+#endif
             return isOk;
         }
         return true;
@@ -76,7 +78,8 @@ public:
         if (rgAffectedApps) {
             delete[] rgAffectedApps; rgAffectedApps = NULL;
         }
-        if (dwSessionHandle && dwSessionHandle != INVALID_HANDLE_VALUE_DW) {
+        nAffectedApps = 0;
+        if (dwSessionHandle != INVALID_HANDLE_VALUE_DW) {
             RmEndSession(dwSessionHandle);
         }
     }

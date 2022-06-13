@@ -154,8 +154,6 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     if (all_files == 0) {
         return 0; //nothing to delete
     }
-    RmSessionManager rMgr;
-    rMgr.init();
 
     std::cout << "[INFO] Found dropped files:\n";
     std::map<LONGLONG, std::wstring> dos_names;
@@ -169,8 +167,9 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     DWORD i = 0;
     for (auto itr = dos_names.begin(); itr != dos_names.end() && i < files_count; ++itr, ++i) {
         names[i] = itr->second.c_str();
-        std::wcout << "Names[" << i << "]: " << names[i] << "\n";
     }
+
+    RmSessionManager rMgr;
     if (rMgr.populate(names, files_count)) {
         std::cout << "[*] RmSessionManager populated!\n";
     }
