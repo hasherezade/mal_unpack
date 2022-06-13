@@ -7,6 +7,7 @@
 #include "util/process_util.h"
 #include "driver_comm.h"
 #include "util/file_util.h"
+#include "util/rm_util.h"
 
 #define WAIT_FOR_PROCESSES 100
 #define MAX_ELEMENTS 1024
@@ -153,12 +154,36 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     if (all_files == 0) {
         return 0; //nothing to delete
     }
+    RmSessionManager rMgr;
+    rMgr.init();
 
     std::cout << "[INFO] Found dropped files:\n";
     std::map<LONGLONG, std::wstring> dos_names;
     file_util::file_ids_to_names(allDroppedFiles, dos_names, VOLUME_NAME_DOS);
     std::wcout << filenames_to_string(dos_names);
     const size_t all_names = dos_names.size();
+    const DWORD files_count = dos_names.size();
+    std::cout << "Filling names " << files_count << " \n";
+
+    LPCWSTR* names = new LPCWSTR[files_count];
+    DWORD i = 0;
+    for (auto itr = dos_names.begin(); itr != dos_names.end() && i < files_count; ++itr, ++i) {
+        names[i] = itr->second.c_str();
+        std::wcout << "Names[" << i << "]: " << names[i] << "\n";
+    }
+    if (rMgr.populate(names, files_count)) {
+        std::cout << "[*] RmSessionManager populated!\n";
+    }
+    else {
+        std::cout << "[!] RmSessionManager populating failed!\n";
+    }
+    rMgr.printList();
+    if (rMgr.shutdownApps()) {
+        std::cout << "[*] RmSessionManager: Shutdown blocking apps successful!\n";
+    }
+    else {
+        std::cout << "[!] RmSessionManager: Shutdown blocking apps failed!\n";
+    }
 
     size_t remaining = all_names;
     size_t deleted_total = 0;
@@ -182,6 +207,7 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     std::cout << "[INFO] Total deleted: " << std::dec << deleted_total << " (out of " << all_names << ") dropped files in " << attempts << " attempts.\n";
     if (!remaining) {
         std::cout << "[OK] All dropped files are deleted!\n";
+        rMgr.restartApps();
         return 0;
     }
     
@@ -205,6 +231,7 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
         std::cerr << "[WARNING] Failed to delete:\n";
         std::wcerr << filenames_to_string(remaining_names);
     }
+    rMgr.restartApps();
     return remaining;
 }
 
