@@ -1,6 +1,6 @@
 #include "path_util.h"
 
-std::string make_dir_name(std::string baseDir, time_t timestamp, std::string prefix)
+std::string make_dir_name(std::string baseDir, time_t timestamp, const std::string &prefix)
 {
     std::stringstream stream;
     if (baseDir.length() > 0) {
