@@ -11,7 +11,7 @@ git clone https://github.com/hasherezade/mal_unpack.git
 ```
 2. Fetch needed executables: go to [`util_exe`](../mal_unpack_lib/util_exe), and follow the steps from the [README](../mal_unpack_lib/util_exe/README.md).
 3. Install `malunpack` library by following the [README](../mal_unpack_lib/malunpack/README.md)
-4. Import `malunpack` library into your script, as in below example:
+4. Import `malunpack` library into your script, as in the below example:
 ```python
 import malunpack
 
