@@ -1,5 +1,0 @@
-*.bak
-*.exe
-*log
-__pycache__/*
-dumps/*
