@@ -10,7 +10,18 @@ url2 = 'https://github.com/hasherezade/pe_utils/releases/download/1.0/dll_load64
 url_mal_unp32 = "https://github.com/hasherezade/mal_unpack/releases/download/0.9.5/mal_unpack32.zip"
 url_mal_unp64 = "https://github.com/hasherezade/mal_unpack/releases/download/0.9.5/mal_unpack64.zip"
 
-
+def download_file(filename, url):  
+    try:
+        r = requests.get(url, allow_redirects=True)
+    except:  
+        return False
+        
+    if r.status_code != 200 or r.content is None:
+        return False
+        
+    open(filename, 'wb').write(r.content)
+    return True
+    
 def is_windows_64bit():
     return os.environ['PROCESSOR_ARCHITECTURE'].endswith('64')
 
@@ -21,19 +32,10 @@ def main():
         
     urls = {"dll_load32.exe" : url1, "dll_load64.exe" : url2, "mal_unpack.zip" : url_mal_unp}
     for fname in urls:
-        try:
-            r = requests.get(urls[fname], allow_redirects=True)
-        except:
+        if not download_file(fname, urls[fname]):
             print("[-] Could not download: " + fname)
             continue
 
-        if r.status_code != 200 or r.content is None:
-            print("Could not download: " + fname)
-            continue
-
-        file_content = r.content
-        open(fname, 'wb').write(file_content)
-        
         p = Path(fname)
         ext = p.suffix
         print("[+] Downloaded: " + fname)
