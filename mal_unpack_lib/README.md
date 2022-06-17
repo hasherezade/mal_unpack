@@ -19,7 +19,7 @@ Once those three files are available in the 'util_exe' directory the lib can be 
 git clone https://github.com/hasherezade/mal_unpack.git
 ```
 2. Fetch needed executables: go to [`util_exe`](../mal_unpack_lib/util_exe), and follow the steps from the [README](../mal_unpack_lib/util_exe/README.md).
-3. Import malunpack library into your script, as in below example:
+3. Import `malunpack` library into your script, as in below example:
 ```python
 import malunpack
 
