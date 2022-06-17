@@ -29,9 +29,9 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 
 ℹ For the best performance, install [MalUnpackCompanion driver](https://github.com/hasherezade/mal_unpack_drv).
 
-ℹ Check also the python wrapper: [MalUnpack Runner](https://github.com/hasherezade/mal_unpack_py/runner)
+ℹ Check also the python wrapper: [MalUnpack Runner](https://github.com/hasherezade/mal_unpack_py/tree/master/runner)
 
-ℹ Check the python Library: [MalUnpack Lib](https://github.com/hasherezade/mal_unpack_py/mal_unpack_lib)
+ℹ Check the python Library: [MalUnpack Lib](https://github.com/hasherezade/mal_unpack_py/tree/master/mal_unpack_lib)
 
 ## Clone
 
