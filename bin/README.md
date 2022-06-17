@@ -1,9 +1,11 @@
 ##  Utils required by the Python wrappers (mal_unpack_lib, runner)
 
-To run correctly the library requires 3 executable files: 
-- dll_load32.exe: the dll loader for 32 bit files
-- dll_load64.exe: the dll loader for 64 bit files
-- mal_unpack.exe: the lastest version available [here](https://github.com/hasherezade/mal_unpack/releases)
+To run correctly the library requires 3 executable files:
+- `mal_unpack.exe`: the lastest version available [here](https://github.com/hasherezade/mal_unpack/releases)
+- `dll_load32.exe`: the dll loader for 32 bit files*
+- `dll_load64.exe`: the dll loader for 64 bit files*
+
+_*from: https://github.com/hasherezade/pe_utils_
 
 This script will automatically download them and copy to the appropriate locations.
 
