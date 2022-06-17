@@ -34,6 +34,6 @@ print(dump)
 - Mal_Unpack author: [@hasherezade](https://twitter.com/hasherezade)
 - Mal_Unpack Lib wrapper: [@fr0gger_](https://twitter.com/fr0gger_)
 
-# Licence
+# License
 
 See [here.](https://github.com/hasherezade/mal_unpack/blob/master/LICENSE)
