@@ -14,9 +14,10 @@ import json
 import pefile
 
 # Mal-Unpack path and DLL loaders
-MAL_UNPACK_EXE = "../util_exe/mal_unpack.exe"
-DLL_LOAD64 = "../util_exe/dll_load64.exe"
-DLL_LOAD32 = "../util_exe/dll_load32.exe"
+UTIL_PATH="../../util_exe/"
+MAL_UNPACK_EXE = UTIL_PATH + "mal_unpack.exe"
+DLL_LOAD64 = UTIL_PATH + "dll_load64.exe"
+DLL_LOAD32 = UTIL_PATH + "dll_load32.exe"
 
 
 class MalUnpack:

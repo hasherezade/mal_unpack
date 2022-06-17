@@ -8,9 +8,10 @@ import uuid
 import hashlib
 import argparse
 
-MAL_UNPACK_EXE = "mal_unpack.exe"
-DLL_LOAD64 = "dll_load64.exe"
-DLL_LOAD32 = "dll_load32.exe"
+UTIL_PATH="../util_exe/"
+MAL_UNPACK_EXE = UTIL_PATH + "mal_unpack.exe"
+DLL_LOAD64 = UTIL_PATH + "dll_load64.exe"
+DLL_LOAD32 = UTIL_PATH + "dll_load32.exe"
 DUMPS_DIR = "dumps"
 
 def mal_unp_res_to_str(returncode):
