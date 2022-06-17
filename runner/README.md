@@ -5,7 +5,7 @@ Allows to:
 + autodetect file extension and unpack EXE as well as a DLL.
 + unpack a single file as well as full directory at once.
 
-_The package contains __dll_load__ from: https://github.com/hasherezade/pe_utils_
+_The package requires: https://github.com/hasherezade/mal_unpack/tree/master/bin_
 
 
 ## Installation
