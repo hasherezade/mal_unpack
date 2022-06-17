@@ -7,6 +7,8 @@ To run correctly the library requires 3 executable files:
 
 This script will automatically download them and copy to the appropriate locations.
 
+###  Usage:
+
 1. Install requirements:
 ```console
 pip install -r requirements.txt
@@ -17,4 +19,4 @@ pip install -r requirements.txt
 python fetch.py
 ```
 
-It should require all the neccessary executables
+It should fetch all the neccessary executables
