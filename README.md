@@ -31,6 +31,8 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 
 ℹ Check also the python wrapper: [MalUnpack Runner](https://github.com/hasherezade/mal_unpack/tree/master/runner)
 
+i Check the python Library: [mal_unpack_lib](https://github.com/fr0gger/mal_unpack/tree/master/mal_unpack_lib)
+
 
 ## Clone
 
