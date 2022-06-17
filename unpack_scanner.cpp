@@ -56,7 +56,7 @@ ScanStats UnpackScanner::scanProcesses(IN std::set<DWORD> pids)
     ScanStats myStats;
 
     std::set<DWORD>::iterator pid_itr;
-    for (pid_itr = pids.begin(); pid_itr != pids.end(); pid_itr++) {
+    for (pid_itr = pids.begin(); pid_itr != pids.end(); ++pid_itr) {
 
         const DWORD pid = *pid_itr;
         if (pid == 0) continue;
@@ -306,7 +306,7 @@ size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTarget
     size_t initial_size = _primaryTargets.size();
 
     std::set<DWORD>::const_iterator itr;
-    for (itr = _primaryTargets.begin(); itr != _primaryTargets.end(); itr++) {
+    for (itr = _primaryTargets.begin(); itr != _primaryTargets.end(); ++itr) {
         DWORD pid = *itr;
 #ifdef _DEBUG
         std::wcout << "Searching children of: " << pid << " [" << get_process_module_path(pid) << "]\n";
@@ -324,7 +324,7 @@ size_t UnpackScanner::collectSecondaryTargets(IN std::set<DWORD> &_primaryTarget
 #ifdef _DEBUG
         std::cout << std::dec << pid << " >>>>> Adding " << childrenList.size() << " children of : " << pid << " to targets list\n";
         std::set<DWORD>::iterator itr;
-        for (itr = childrenList.begin(); itr != childrenList.end(); itr++) {
+        for (itr = childrenList.begin(); itr != childrenList.end(); ++itr) {
             DWORD child_pid = *itr;
             std::wcout << "Child: " << child_pid << " [" << get_process_module_path(child_pid) << "]\n";
         }
@@ -345,7 +345,7 @@ size_t UnpackScanner::kill_pids(IN std::set<DWORD> &pids)
 {
     size_t remaining = pids.size();
     std::set<DWORD>::iterator itr;
-    for (itr = pids.begin(); itr != pids.end(); itr++) {
+    for (itr = pids.begin(); itr != pids.end(); ++itr) {
         DWORD pid = *itr;
         if (kill_pid(pid)) {
             remaining--;

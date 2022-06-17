@@ -19,9 +19,9 @@ def mal_unp_res_to_str(returncode):
     if returncode == 0:
         return "INFO"
     if returncode == 1:
-        return "NOT_DETECTED"     
+        return "NOT_DETECTED"
     if returncode == 2:
-        return "DETECTED"       
+        return "DETECTED"
     return hex(returncode)
 
 def get_config(sample):
@@ -47,7 +47,6 @@ def get_config(sample):
         
 def rename_sample(sample, is_dll):
     p = Path(sample)
-    ext = p.suffix
     new_ext = ".exe"
     if (is_dll):
         new_ext = ".dll"

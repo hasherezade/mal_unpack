@@ -33,7 +33,6 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 
 ℹ Check the python Library: [MalUnpack Lib](https://github.com/fr0gger/mal_unpack/tree/master/mal_unpack_lib)
 
-
 ## Clone
 
 Use **recursive clone** to get the repo together with submodules:
