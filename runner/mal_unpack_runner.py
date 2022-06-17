@@ -8,7 +8,7 @@ import uuid
 import hashlib
 import argparse
 
-UTIL_PATH="../util_exe/"
+UTIL_PATH="../bin/"
 MAL_UNPACK_EXE = UTIL_PATH + "mal_unpack.exe"
 DLL_LOAD64 = UTIL_PATH + "dll_load64.exe"
 DLL_LOAD32 = UTIL_PATH + "dll_load32.exe"
