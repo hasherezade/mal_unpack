@@ -1,0 +1,8 @@
+#pragma once
+
+#define MALUNP_MAJOR_VERSION 0
+#define MALUNP_MINOR_VERSION 9
+#define MALUNP_MICRO_VERSION 6
+#define MALUNP_PATCH_VERSION 0
+
+#define MALUNP_VERSION_STR	"0.9.6"

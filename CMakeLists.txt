@@ -47,8 +47,8 @@ set (hdrs
 )
 
 set (rsrc
-	version.h
-	mal_unpack.rc
+	mal_unpack_ver.h
+	mal_unpack_res.rc
 )
 
 # libs

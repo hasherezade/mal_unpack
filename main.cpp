@@ -14,7 +14,7 @@
 #include <pe_sieve_return_codes.h>
 
 #include "unpack_scanner.h"
-#include "version.h"
+#include "mal_unpack_ver.h"
 
 #include "util/process_util.h"
 #include "util/path_util.h"
@@ -22,7 +22,7 @@
 
 #define WAIT_FOR_PROCESS_TIMEOUT 5000
 
-#define VERSION VER_FILEVERSION_STR
+#define VERSION MALUNP_VERSION_STR
 #define LOG_FILE_NAME "unpack.log"
 
 void print_log_hdr(std::wofstream &report, const time_t& session_timestamp, const t_params_struct& params)
