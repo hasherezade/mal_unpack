@@ -8,7 +8,7 @@
 #define VER_FILEDESCRIPTION_STR     "MalUnpack: dynamic malware unpacker based on PE-sieve."
 #define VER_INTERNALNAME_STR        "mal_unpack.exe"
 #define VER_ORIGINALFILENAME_STR    "mal_unpack.exe"
-#define VER_LEGALCOPYRIGHT_STR      "Copyright © 2018-2022 Hasherezade"
+#define VER_LEGALCOPYRIGHT_STR      "Copyright © 2018-2023 Hasherezade"
 #define VER_PRODUCTNAME_STR         "MalUnpack"
 #define VER_PRODUCTVERSION_STR      VER_FILEVERSION_STR
 #define VER_FILEVERSION             MALUNP_MAJOR_VERSION,MALUNP_MINOR_VERSION,MALUNP_MICRO_VERSION,MALUNP_PATCH_VERSION
