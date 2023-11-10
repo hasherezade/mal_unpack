@@ -155,8 +155,15 @@ public:
         this->addParam(new BoolParam(PARAM_MINDUMP, false));
         this->setInfo(PARAM_MINDUMP, "Create a minidump of the detected process");
 
-        this->addParam(new BoolParam(PARAM_SHELLCODE, false));
-        this->setInfo(PARAM_SHELLCODE, "Detect shellcodes");
+        EnumParam* shellcParam = new EnumParam(PARAM_SHELLCODE, "shellc_mode", false);
+        if (shellcParam) {
+            this->addParam(shellcParam);
+            this->setInfo(PARAM_SHELLCODE, "Detect shellcode implants (by patterns or statistics). ");
+            shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_PATTERNS, "P", "detect shellcodes by patterns");
+            shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_STATS, "S", "detect shellcodes by stats");
+            shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_PATTERNS_OR_STATS, "A", "detect shellcodes by patterns or stats (any match)");
+            shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_PATTERNS_AND_STATS, "B", "detect shellcodes by patterns and stats (both match)");
+        }
 
         this->addParam(new BoolParam(PARAM_HOOKS, false));
         this->setInfo(PARAM_HOOKS, "Detect hooks and patches");
@@ -180,7 +187,6 @@ public:
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD1, "R1", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD1));
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2, "R2", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2));
         }
-
 
         EnumParam* norespParam = new EnumParam(PARAM_NORESPAWN, "respawn_protect", false);
         if (norespParam) {
@@ -303,7 +309,7 @@ protected:
 
         copyVal<BoolParam>(PARAM_REFLECTION, ps.make_reflection);
         copyVal<BoolParam>(PARAM_MINDUMP, ps.minidump);
-        copyVal<BoolParam>(PARAM_SHELLCODE, ps.shellcode);
+        copyVal<EnumParam>(PARAM_SHELLCODE, ps.shellcode);
         copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
         copyVal<EnumParam>(PARAM_DATA, ps.data);
         copyVal<BoolParam>(PARAM_CACHE, ps.use_cache);
