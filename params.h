@@ -18,6 +18,7 @@ using namespace paramkit;
 #define PARAM_DATA "data"
 #define PARAM_MINDUMP "minidmp"
 #define PARAM_SHELLCODE "shellc"
+#define PARAM_PATTERN "pattern"
 #define PARAM_HOOKS "hooks"
 #define PARAM_CACHE "cache"
 #define PARAM_IMP "imp"
@@ -165,6 +166,9 @@ public:
             shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_PATTERNS_AND_STATS, "B", "detect shellcodes by patterns and stats (both match)");
         }
 
+        this->addParam(new StringParam(PARAM_PATTERN, false));
+        this->setInfo(PARAM_PATTERN, "Set additional shellcode patterns (file in the SIG format).");
+
         this->addParam(new BoolParam(PARAM_HOOKS, false));
         this->setInfo(PARAM_HOOKS, "Detect hooks and patches");
 
@@ -217,6 +221,7 @@ public:
         this->addParamToGroup(PARAM_DATA, str_group);
         this->addParamToGroup(PARAM_SHELLCODE, str_group);
         this->addParamToGroup(PARAM_HOOKS, str_group);
+        this->addParamToGroup(PARAM_PATTERN, str_group);
 
         str_group = "3. dump options";
         this->addGroup(new ParamGroup(str_group));
@@ -262,6 +267,11 @@ public:
         fillPEsieveStruct(ps.hh_args.pesieve_args);
     }
 
+    void freeStruct(t_params_struct& ps)
+    {
+        free_strparam(ps.hh_args.pesieve_args.pattern_file);
+    }
+
     virtual void printVersionInfo()
     {
         if (versionStr.length()) {
@@ -300,6 +310,49 @@ protected:
             return "could not fetch the version";
         }
     }
+    
+    // Fill PE-sieve params
+
+    bool alloc_strparam(pesieve::PARAM_STRING& strparam, size_t len)
+    {
+        if (strparam.buffer != nullptr) { // already allocated
+            return false;
+        }
+        strparam.buffer = (char*)calloc(len + 1, sizeof(char));
+        if (strparam.buffer) {
+            strparam.length = len;
+            return true;
+        }
+        return false;
+    }
+    
+    void free_strparam(pesieve::PARAM_STRING& strparam)
+    {
+        if (strparam.buffer) {
+            free(strparam.buffer);
+        }
+        strparam.buffer = nullptr;
+        strparam.length = 0;
+    }
+
+    bool fillStringParam(const std::string& paramId, pesieve::PARAM_STRING& strparam)
+    {
+        StringParam* myStr = dynamic_cast<StringParam*>(this->getParam(paramId));
+        if (!myStr || !myStr->isSet()) {
+            return false;
+        }
+        std::string val = myStr->valToString();
+        const size_t len = val.length();
+        if (!len) {
+            return false;
+        }
+        alloc_strparam(strparam, len);
+        bool is_copied = false;
+        if (strparam.buffer) {
+            is_copied = copyCStr<StringParam>(paramId, strparam.buffer, strparam.length);
+        }
+        return is_copied;
+    }
 
     void fillPEsieveStruct(pesieve::t_params &ps)
     {
@@ -313,6 +366,8 @@ protected:
         copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
         copyVal<EnumParam>(PARAM_DATA, ps.data);
         copyVal<BoolParam>(PARAM_CACHE, ps.use_cache);
+
+        fillStringParam(PARAM_PATTERN, ps.pattern_file);
     }
 
 };

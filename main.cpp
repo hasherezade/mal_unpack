@@ -258,5 +258,6 @@ int main(int argc, char* argv[])
         }
     }
     save_remaing_files_report(session_timestamp, params, scanner);
+    uParams.freeStruct(params);
     return ret_code;
 }
