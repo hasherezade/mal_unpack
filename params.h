@@ -19,6 +19,7 @@ using namespace paramkit;
 #define PARAM_MINDUMP "minidmp"
 #define PARAM_SHELLCODE "shellc"
 #define PARAM_PATTERN "pattern"
+#define PARAM_THREADS "threads"
 #define PARAM_HOOKS "hooks"
 #define PARAM_CACHE "cache"
 #define PARAM_IMP "imp"
@@ -165,6 +166,9 @@ public:
             shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_PATTERNS_OR_STATS, "A", "detect shellcodes by patterns or stats (any match)");
             shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_PATTERNS_AND_STATS, "B", "detect shellcodes by patterns and stats (both match)");
         }
+        
+        this->addParam(new BoolParam(PARAM_THREADS, false));
+        this->setInfo(PARAM_THREADS, "Scan threads' callstack. Detect shellcodes, incl. 'sleeping beacons'.");
 
         this->addParam(new StringParam(PARAM_PATTERN, false));
         this->setInfo(PARAM_PATTERN, "Set additional shellcode patterns (file in the SIG format).");
@@ -220,6 +224,7 @@ public:
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_DATA, str_group);
         this->addParamToGroup(PARAM_SHELLCODE, str_group);
+        this->addParamToGroup(PARAM_THREADS, str_group);
         this->addParamToGroup(PARAM_HOOKS, str_group);
         this->addParamToGroup(PARAM_PATTERN, str_group);
 
@@ -363,6 +368,7 @@ protected:
         copyVal<BoolParam>(PARAM_REFLECTION, ps.make_reflection);
         copyVal<BoolParam>(PARAM_MINDUMP, ps.minidump);
         copyVal<EnumParam>(PARAM_SHELLCODE, ps.shellcode);
+        copyVal<BoolParam>(PARAM_THREADS, ps.threads);
         copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
         copyVal<EnumParam>(PARAM_DATA, ps.data);
         copyVal<BoolParam>(PARAM_CACHE, ps.use_cache);
