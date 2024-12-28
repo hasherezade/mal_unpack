@@ -18,6 +18,7 @@ using namespace paramkit;
 #define PARAM_DATA "data"
 #define PARAM_MINDUMP "minidmp"
 #define PARAM_SHELLCODE "shellc"
+#define PARAM_OBFUSCATED "obfusc"
 #define PARAM_PATTERN "pattern"
 #define PARAM_THREADS "threads"
 #define PARAM_HOOKS "hooks"
@@ -103,6 +104,35 @@ std::string translate_imprec_mode(const pesieve::t_imprec_mode imprec_mode)
     return "undefined";
 }
 
+std::string translate_obfusc_mode(const pesieve::t_obfusc_mode& mode)
+{
+    switch (mode) {
+    case pesieve::OBFUSC_NONE:
+        return "none: do not detect obfuscated areas";
+    case pesieve::OBFUSC_STRONG_ENC:
+        return "detect areas possibly encrypted with strong encryption";
+    case pesieve::OBFUSC_WEAK_ENC:
+        return "detect areas possibly encrypted with weak encryption (lower entropy, possible XOR patterns)";
+    case pesieve::OBFUSC_ANY:
+        return "detect any: possible strong or weak encryption";
+    }
+    return "";
+}
+
+std::string obfusc_mode_mode_to_id(const pesieve::t_obfusc_mode& mode)
+{
+    switch (mode) {
+    case pesieve::OBFUSC_STRONG_ENC:
+        return "S";
+    case pesieve::OBFUSC_WEAK_ENC:
+        return "W";
+    case pesieve::OBFUSC_ANY:
+        return "A";
+    }
+    return "N";
+}
+
+
 bool addDataMode(EnumParam *dataParam, pesieve::t_data_scan_mode mode)
 {
     if (!dataParam) {
@@ -166,7 +196,17 @@ public:
             shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_PATTERNS_OR_STATS, "A", "detect shellcodes by patterns or stats (any match)");
             shellcParam->addEnumValue(pesieve::t_shellc_mode::SHELLC_PATTERNS_AND_STATS, "B", "detect shellcodes by patterns and stats (both match)");
         }
-        
+
+        EnumParam* obfuscParam = new EnumParam(PARAM_OBFUSCATED, "obfusc_mode", false);
+        if (obfuscParam) {
+            this->addParam(obfuscParam);
+            this->setInfo(PARAM_OBFUSCATED, "Detect encrypted content, and possible obfuscated shellcodes.");
+            for (size_t i = 0; i < pesieve::t_obfusc_mode::OBFUSC_COUNT; i++) {
+                pesieve::t_obfusc_mode mode = (pesieve::t_obfusc_mode)(i);
+                obfuscParam->addEnumValue(mode, obfusc_mode_mode_to_id(mode), translate_obfusc_mode(mode));
+            }
+        }
+
         this->addParam(new BoolParam(PARAM_THREADS, false));
         this->setInfo(PARAM_THREADS, "Scan threads' callstack. Detect shellcodes, incl. 'sleeping beacons'.");
 
@@ -227,6 +267,7 @@ public:
         this->addParamToGroup(PARAM_THREADS, str_group);
         this->addParamToGroup(PARAM_HOOKS, str_group);
         this->addParamToGroup(PARAM_PATTERN, str_group);
+        this->addParamToGroup(PARAM_OBFUSCATED, str_group);
 
         str_group = "3. dump options";
         this->addGroup(new ParamGroup(str_group));
@@ -372,6 +413,7 @@ protected:
         copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
         copyVal<EnumParam>(PARAM_DATA, ps.data);
         copyVal<BoolParam>(PARAM_CACHE, ps.use_cache);
+        copyVal<EnumParam>(PARAM_OBFUSCATED, ps.obfuscated);
 
         fillStringParam(PARAM_PATTERN, ps.pattern_file);
     }
