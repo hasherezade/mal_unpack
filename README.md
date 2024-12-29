@@ -34,7 +34,7 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 +  If you want to automatically reconstruct the dynamic Import Table (or list the imports loaded into the shellcode), use the option `/imp`.
 
 > [!IMPORTANT]  
-> All available arguments are documented on [Wiki](https://github.com/hasherezade/pe-sieve/wiki). They can also be listed using the argument `/help`.
+> The available arguments are documented on [Wiki](https://github.com/hasherezade/pe-sieve/wiki). They can also be listed using the argument `/help`.
 
 ## Helpers and utilities
 
