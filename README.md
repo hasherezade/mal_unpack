@@ -17,9 +17,13 @@ Dynamic unpacker based on [PE-sieve](https://github.com/hasherezade/pe-sieve.git
 It deploys a packed malware, waits for it to unpack the payload, dumps the payload, and kills the original process.</b>
 
 📖 Read more on [PE-sieve's Wiki](https://github.com/hasherezade/pe-sieve/wiki/1.-FAQ#pe-sieve-vs-malunpack---what-is-the-difference).
-<br/>
+
+**WARNING:** This unpacker deploys the original malware. Use it only on a VirtualMachine.
+
 
 ## Usage
+
+Basic usage:
 
 ```console
 mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
@@ -32,7 +36,7 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 
 All available arguments are documented on [Wiki](https://github.com/hasherezade/pe-sieve/wiki). They can also be listed using the argument `/help`.
 
-**WARNING:** This unpacker deploys the original malware. Use it only on a VirtualMachine.
+## Helpers and utilities
 
 ℹ For the best performance, install [MalUnpackCompanion driver](https://github.com/hasherezade/mal_unpack_drv).
 
