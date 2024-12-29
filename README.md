@@ -13,15 +13,12 @@
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-blue.svg)](https://github.com/hasherezade/mal_unpack/blob/master/LICENSE)
 [![Platform Badge](https://img.shields.io/badge/Windows-0078D6?logo=windows)](https://github.com/hasherezade/mal_unpack)
 
-Dynamic unpacker based on [PE-sieve](https://github.com/hasherezade/pe-sieve.git).<br/>
-It deploys a packed malware, waits for it to unpack the payload, dumps the payload, and kills the original process.</b>
+Dynamic unpacker based on [PE-sieve](https://github.com/hasherezade/pe-sieve.git) ( 📖  [Read more](https://github.com/hasherezade/pe-sieve/wiki/1.-FAQ#pe-sieve-vs-malunpack---what-is-the-difference) ).
 
+It deploys a packed malware, waits for it to unpack the payload, dumps the payload, and kills the original process.</b>
 
 > [!CAUTION]  
 > This unpacker deploys the original malware. Use it only on a VirtualMachine.
-
-> [!IMPORTANT]
-> 📖 Read more on [PE-sieve's Wiki](https://github.com/hasherezade/pe-sieve/wiki/1.-FAQ#pe-sieve-vs-malunpack---what-is-the-difference).
 
 ## Usage
 
@@ -36,7 +33,8 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 +  If you want to dump modified/hooked/patched PEs, use the option `/hooks`.
 +  If you want to automatically reconstruct the dynamic Import Table (or list the imports loaded into the shellcode), use the option `/imp`.
 
-All available arguments are documented on [Wiki](https://github.com/hasherezade/pe-sieve/wiki). They can also be listed using the argument `/help`.
+> [!IMPORTANT]  
+> All available arguments are documented on [Wiki](https://github.com/hasherezade/pe-sieve/wiki). They can also be listed using the argument `/help`.
 
 ## Helpers and utilities
 
