@@ -18,8 +18,9 @@ It deploys a packed malware, waits for it to unpack the payload, dumps the paylo
 
 📖 Read more on [PE-sieve's Wiki](https://github.com/hasherezade/pe-sieve/wiki/1.-FAQ#pe-sieve-vs-malunpack---what-is-the-difference).
 
-**WARNING:** This unpacker deploys the original malware. Use it only on a VirtualMachine.
 
+> [!WARNING]  
+> This unpacker deploys the original malware. Use it only on a VirtualMachine.
 
 ## Usage
 
