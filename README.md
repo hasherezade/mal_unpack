@@ -16,11 +16,12 @@
 Dynamic unpacker based on [PE-sieve](https://github.com/hasherezade/pe-sieve.git).<br/>
 It deploys a packed malware, waits for it to unpack the payload, dumps the payload, and kills the original process.</b>
 
-📖 Read more on [PE-sieve's Wiki](https://github.com/hasherezade/pe-sieve/wiki/1.-FAQ#pe-sieve-vs-malunpack---what-is-the-difference).
 
-
-> [!WARNING]  
+> [!CAUTION]  
 > This unpacker deploys the original malware. Use it only on a VirtualMachine.
+
+> [!IMPORTANT]
+> 📖 Read more on [PE-sieve's Wiki](https://github.com/hasherezade/pe-sieve/wiki/1.-FAQ#pe-sieve-vs-malunpack---what-is-the-difference).
 
 ## Usage
 
