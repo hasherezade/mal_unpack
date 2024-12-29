@@ -20,7 +20,7 @@ It deploys a packed malware, waits for it to unpack the payload, dumps the paylo
 > [!CAUTION]  
 > This unpacker deploys the original malware. Use it only on a VirtualMachine.
 
-## Usage
+## ⚙ Usage
 
 Basic usage:
 
@@ -36,7 +36,7 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 > [!IMPORTANT]  
 > The available arguments are documented on [Wiki](https://github.com/hasherezade/pe-sieve/wiki). They can also be listed using the argument `/help`.
 
-## Helpers and utilities
+## 🛠 Helpers and utilities
 
 📌  For the best performance, install [MalUnpackCompanion driver](https://github.com/hasherezade/mal_unpack_drv).
 
