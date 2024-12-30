@@ -31,7 +31,6 @@ mal_unpack.exe /exe <path_to_the_malware> /timeout <timeout: ms>
 +  By default, it dumps implanted PEs.
 +  If you want to dump shellcodes, use the option: [`/shellc`](https://github.com/hasherezade/pe-sieve/wiki/4.1.-Detect-shellcodes-(shellc)).
 +  If you want to dump modified/hooked/patched PEs, use the option `/hooks`.
-+  If you want to automatically reconstruct the dynamic Import Table (or list the imports loaded into the shellcode), use the option [`/imp`](https://github.com/hasherezade/pe-sieve/wiki/4.3.-Import-table-reconstruction-(imp)).
 +  If you want the unpacker to terminate on timeout, rather than on the first found implant, use `/trigger T`.
 
 > [!IMPORTANT]  
