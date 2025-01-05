@@ -22,6 +22,7 @@ void UnpackScanner::args_init(UnpackScanner::t_unp_params &unp_args)
     unp_args.pesieve_args.make_reflection = false;
     unp_args.pesieve_args.imprec_mode = pesieve::PE_IMPREC_AUTO;
     unp_args.pesieve_args.data = pesieve::PE_DATA_SCAN_DOTNET;
+    unp_args.pesieve_args.results_filter = pesieve::SHOW_SUSPICIOUS;
 
     unp_args.loop_scanning = true;
     unp_args.module_path = L"";

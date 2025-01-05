@@ -402,8 +402,6 @@ protected:
 
     void fillPEsieveStruct(pesieve::t_params &ps)
     {
-        ps.results_filter = pesieve::SHOW_SUSPICIOUS;
-
         bool hooks = false;
         copyVal<BoolParam>(PARAM_HOOKS, hooks);
         ps.no_hooks = hooks ? false : true;
