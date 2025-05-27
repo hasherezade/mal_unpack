@@ -1,4 +1,5 @@
 # mal_unpack
+![](./logo/logo.png)
 
 [![Build status](https://ci.appveyor.com/api/projects/status/3cqqlah6unfhasik?svg=true)](https://ci.appveyor.com/project/hasherezade/mal-unpack)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/fedbe124aa694761907bbe51bfc8d6f9)](https://app.codacy.com/gh/hasherezade/mal_unpack/dashboard?branch=master)
