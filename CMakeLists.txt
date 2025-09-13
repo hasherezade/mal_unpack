@@ -74,6 +74,10 @@ target_link_libraries ( ${PROJECT_NAME} ${M_PESIEVE} ${M_PARAMKIT} )
 # dependencies
 add_dependencies( ${PROJECT_NAME} ${M_PESIEVE} ${M_PARAMKIT} )
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	target_link_options( ${PROJECT_NAME} PRIVATE "/MANIFEST:NO")
+endif()
+
 #install
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT ${PROJECT_NAME} )
 
@@ -85,3 +89,4 @@ if(MU_BUILD_TESTING)
 	add_test ( TestRuns ${CMAKE_INSTALL_PREFIX}\\${PROJECT_NAME} --help )
 	set_tests_properties(TestRuns PROPERTIES PASS_REGULAR_EXPRESSION "PE-sieve")
 endif()
+

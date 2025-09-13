@@ -1,6 +1,18 @@
 #include "mal_unpack_ver.h"
 #include <windows.h>
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Application Manifest
+//
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "mal_unpack.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Application Version
+//
+
 #define VER_COMPANYNAME_STR         "Hashereware (hashereware.com)"
 #define VER_FILETYPE                VFT_APP
 #define VER_FILESUBTYPE             VFT2_UNKNOWN
