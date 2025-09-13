@@ -100,7 +100,7 @@ std::wstring file_util::get_file_path(IN const char* file_name)
 		return L"";
 	}
 	
-	wchar_t* prefix = L"\\\\?\\";
+	const wchar_t prefix[] = L"\\\\?\\";
 	size_t prefix_len = wcslen(prefix);
 
 	if (got_len < prefix_len) {
