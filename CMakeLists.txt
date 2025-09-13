@@ -1,4 +1,5 @@
 cmake_minimum_required ( VERSION 3.12.4 )
+cmake_policy(SET CMP0015 NEW)
 
 project (mal_unpack)
 option(MU_BUILD_TESTING "enable testing for mal_unpack" ON)
@@ -66,6 +67,17 @@ endif()
 add_subdirectory (pe-sieve)
 set ( PESIEVE_LIB $<TARGET_FILE:pe-sieve> CACHE PATH "PE-sieve library path" )
 
+set (used_libs
+	psapi.lib
+	ntdll.lib
+	shlwapi
+	imagehlp
+	rstrtmgr
+)
+
+LINK_DIRECTORIES ( ${PESIEVE_LIB} )
+add_executable ( ${PROJECT_NAME} ${hdrs} ${srcs} ${rsrc} main.cpp )
+target_link_libraries ( ${PROJECT_NAME} ${M_PESIEVE} ${M_PARAMKIT} ${used_libs})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	target_link_options( ${PROJECT_NAME} PRIVATE "/MANIFEST:NO")
@@ -95,19 +107,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 		)
 	endif()
 endif()
-
-set (used_libs
-	psapi.lib
-	ntdll.lib
-	shlwapi
-	imagehlp
-	rstrtmgr
-)
-
-cmake_policy(SET CMP0015 NEW)
-LINK_DIRECTORIES ( ${PESIEVE_LIB} )
-add_executable ( ${PROJECT_NAME} ${hdrs} ${srcs} ${rsrc} main.cpp )
-target_link_libraries ( ${PROJECT_NAME} ${M_PESIEVE} ${M_PARAMKIT} ${used_libs})
 
 # dependencies
 add_dependencies( ${PROJECT_NAME} ${M_PESIEVE} ${M_PARAMKIT} )
