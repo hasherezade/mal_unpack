@@ -78,6 +78,31 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 	target_link_options( ${PROJECT_NAME} PRIVATE "/MANIFEST:NO")
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+
+	option(LINK_STATICALLY "Link PE-Sieve with static versions of linked libraries" ON)
+
+	enable_language(RC)
+	set(CMAKE_RC_COMPILE_OBJECT
+		"<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
+		
+	add_compile_options(
+		-fpermissive
+	)
+
+	add_compile_definitions(
+		_WIN32_WINNT=1536 # 0x600 aka Windows Vista required
+	)
+
+	if(LINK_STATICALLY)
+		add_link_options(
+			-static
+			-static-libgcc
+			-static-libstdc++
+		)
+	endif()
+endif()
+
 #install
 INSTALL( TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX} COMPONENT ${PROJECT_NAME} )
 
