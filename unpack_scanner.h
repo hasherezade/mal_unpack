@@ -2,7 +2,7 @@
 
 #include <windows.h>
 
-#include <Psapi.h>
+#include <psapi.h>
 #pragma comment(lib,"psapi.lib")
 
 #include "pe_sieve_api.h"
