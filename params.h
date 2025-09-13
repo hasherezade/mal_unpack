@@ -23,10 +23,14 @@ using namespace paramkit;
 #define PARAM_THREADS "threads"
 #define PARAM_HOOKS "hooks"
 #define PARAM_CACHE "cache"
-#define PARAM_IMP "imp"
+
 #define PARAM_NORESPAWN "noresp"
 #define PARAM_TRIGGER "trigger"
 #define PARAM_REFLECTION "refl"
+
+//dump options:
+#define PARAM_IMP "imp"
+#define PARAM_REBASE "rebase"
 
 typedef enum {
     TRIG_TIMEOUT = 0,
@@ -236,6 +240,9 @@ public:
             impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2, "R2", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2));
         }
 
+        this->addParam(new BoolParam(PARAM_REBASE, false));
+        this->setInfo(PARAM_REBASE, "Rebase the module to its original base (if known).");
+
         EnumParam* norespParam = new EnumParam(PARAM_NORESPAWN, "respawn_protect", false);
         if (norespParam) {
 
@@ -273,6 +280,7 @@ public:
         this->addGroup(new ParamGroup(str_group));
         this->addParamToGroup(PARAM_MINDUMP, str_group);
         this->addParamToGroup(PARAM_IMP, str_group);
+        this->addParamToGroup(PARAM_REBASE, str_group);
 
         str_group = "4. output options";
         this->addGroup(new ParamGroup(str_group));
@@ -406,6 +414,7 @@ protected:
         copyVal<BoolParam>(PARAM_HOOKS, hooks);
         ps.no_hooks = hooks ? false : true;
 
+        copyVal<BoolParam>(PARAM_REBASE, ps.rebase);
         copyVal<BoolParam>(PARAM_REFLECTION, ps.make_reflection);
         copyVal<BoolParam>(PARAM_MINDUMP, ps.minidump);
         copyVal<EnumParam>(PARAM_SHELLCODE, ps.shellcode);

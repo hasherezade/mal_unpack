@@ -9,7 +9,6 @@
 #include "params.h"
 
 // basic file operations
-#include <iostream>
 #include <fstream>
 #include <pe_sieve_return_codes.h>
 
