@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
-	<assemblyIdentity name="MalUnpack" type="win32" version="0.9.9.1" processorArchitecture="x86"></assemblyIdentity>
+	<assemblyIdentity name="MalUnpack" type="win32" version="1.0.0.0" processorArchitecture="x86"></assemblyIdentity>
 	<description>MalUnpack: dynamic malware unpacker based on PE-sieve.</description>
 	<dependency>
 		<dependentAssembly>

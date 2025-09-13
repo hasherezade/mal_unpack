@@ -122,4 +122,3 @@ if(MU_BUILD_TESTING)
 	add_test ( TestRuns ${CMAKE_INSTALL_PREFIX}\\${PROJECT_NAME} --help )
 	set_tests_properties(TestRuns PROPERTIES PASS_REGULAR_EXPRESSION "PE-sieve")
 endif()
-
