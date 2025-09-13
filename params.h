@@ -31,6 +31,7 @@ using namespace paramkit;
 //dump options:
 #define PARAM_IMP "imp"
 #define PARAM_REBASE "rebase"
+#define PARAM_DUMP_MODE "dmode"
 
 typedef enum {
     TRIG_TIMEOUT = 0,
@@ -107,6 +108,37 @@ std::string translate_imprec_mode(const pesieve::t_imprec_mode imprec_mode)
     }
     return "undefined";
 }
+
+std::string translate_dump_mode(const DWORD dump_mode)
+{
+    switch (dump_mode) {
+    case pesieve::PE_DUMP_AUTO:
+        return "autodetect (default)";
+    case pesieve::PE_DUMP_VIRTUAL:
+        return "virtual (as it is in the memory, no unmapping)";
+    case pesieve::PE_DUMP_UNMAP:
+        return "unmapped (converted to raw using sections' raw headers)";
+    case pesieve::PE_DUMP_REALIGN:
+        return "realigned raw (converted raw format to be the same as virtual)";
+    }
+    return "";
+}
+
+std::string dump_mode_to_id(const DWORD dump_mode)
+{
+    switch (dump_mode) {
+    case pesieve::PE_DUMP_AUTO:
+        return "A";
+    case pesieve::PE_DUMP_VIRTUAL:
+        return "V";
+    case pesieve::PE_DUMP_UNMAP:
+        return "U";
+    case pesieve::PE_DUMP_REALIGN:
+        return "R";
+    }
+    return "N";
+}
+
 
 std::string translate_obfusc_mode(const pesieve::t_obfusc_mode& mode)
 {
@@ -228,20 +260,31 @@ public:
             triggerParam->addEnumValue(t_term_trigger::TRIG_ANY, "A", "if any suspicious indicator detected [DEFAULT]");
         }
 
-        EnumParam *impParam = new EnumParam(PARAM_IMP, "imp_rec", false);
-        if (impParam) {
-            this->addParam(impParam);
+        EnumParam * enumParam = new EnumParam(PARAM_IMP, "imp_rec", false);
+        if (enumParam) {
+            this->addParam(enumParam);
             this->setInfo(PARAM_IMP, "in which mode ImportTable should be recovered");
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_NONE, "N", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_NONE));
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "A", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_AUTO) + " [DEFAULT]");
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "U", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_UNERASE));
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD0, "R0", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD0));
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD1, "R1", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD1));
-            impParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2, "R2", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2));
+            enumParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_NONE, "N", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_NONE));
+            enumParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_AUTO, "A", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_AUTO) + " [DEFAULT]");
+            enumParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_UNERASE, "U", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_UNERASE));
+            enumParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD0, "R0", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD0));
+            enumParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD1, "R1", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD1));
+            enumParam->addEnumValue(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2, "R2", translate_imprec_mode(pesieve::t_imprec_mode::PE_IMPREC_REBUILD2));
         }
 
         this->addParam(new BoolParam(PARAM_REBASE, false));
         this->setInfo(PARAM_REBASE, "Rebase the module to its original base (if known).");
+
+        //PARAM_DUMP_MODE
+        enumParam = new EnumParam(PARAM_DUMP_MODE, "dump_mode", false);
+        if (enumParam) {
+            this->addParam(enumParam);
+            this->setInfo(PARAM_DUMP_MODE, "Set in which mode the detected PE files should be dumped.");
+            for (size_t i = 0; i < pesieve::PE_DUMP_MODES_COUNT; i++) {
+                pesieve::t_dump_mode mode = (pesieve::t_dump_mode)(i);
+                enumParam->addEnumValue(mode, dump_mode_to_id(mode), translate_dump_mode(mode));
+            }
+        }
 
         EnumParam* norespParam = new EnumParam(PARAM_NORESPAWN, "respawn_protect", false);
         if (norespParam) {
@@ -281,6 +324,7 @@ public:
         this->addParamToGroup(PARAM_MINDUMP, str_group);
         this->addParamToGroup(PARAM_IMP, str_group);
         this->addParamToGroup(PARAM_REBASE, str_group);
+        this->addParamToGroup(PARAM_DUMP_MODE, str_group);
 
         str_group = "4. output options";
         this->addGroup(new ParamGroup(str_group));
@@ -414,17 +458,20 @@ protected:
         copyVal<BoolParam>(PARAM_HOOKS, hooks);
         ps.no_hooks = hooks ? false : true;
 
-        copyVal<BoolParam>(PARAM_REBASE, ps.rebase);
         copyVal<BoolParam>(PARAM_REFLECTION, ps.make_reflection);
         copyVal<BoolParam>(PARAM_MINDUMP, ps.minidump);
         copyVal<EnumParam>(PARAM_SHELLCODE, ps.shellcode);
         copyVal<BoolParam>(PARAM_THREADS, ps.threads);
-        copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
+
         copyVal<EnumParam>(PARAM_DATA, ps.data);
         copyVal<BoolParam>(PARAM_CACHE, ps.use_cache);
         copyVal<EnumParam>(PARAM_OBFUSCATED, ps.obfuscated);
 
         fillStringParam(PARAM_PATTERN, ps.pattern_file);
+
+        copyVal<EnumParam>(PARAM_IMP, ps.imprec_mode);
+        copyVal<BoolParam>(PARAM_REBASE, ps.rebase);
+        copyVal<EnumParam>(PARAM_DUMP_MODE, ps.dump_mode);
     }
 
 };
