@@ -1,10 +1,10 @@
 #include "process_util.h"
 #include <iostream>
-#include <Psapi.h>
+#include <psapi.h>
 #include <tlhelp32.h>
 
-#include "..\pe-sieve\utils\ntddk.h"
-#include "..\driver_comm.h"
+#include "../pe-sieve/utils/ntddk.h"
+#include "../driver_comm.h"
 
 HANDLE create_new_process(IN LPSTR exe_path, IN LPSTR cmd, OUT PROCESS_INFORMATION &pi, DWORD flags, IN OPTIONAL ULONGLONG file_id, IN OPTIONAL DWORD noresp)
 {
