@@ -42,7 +42,7 @@ void ScanStats::printStats()
 bool pesieve_scan(pesieve::t_params args, ScanStats &stats)
 {
     stats.scanned++;
-    pesieve::t_report report = PESieve_scan(args);
+    pesieve::t_report report = PESieve_scan(&args);
     if (report.suspicious) {
         stats.detected++;
         std::cout << "Found suspicious: " << std::dec << args.pid << std::endl;
@@ -161,7 +161,7 @@ size_t UnpackScanner::deleteDroppedFiles(time_t session_time)
     file_util::file_ids_to_names(allDroppedFiles, dos_names, VOLUME_NAME_DOS);
     std::wcout << filenames_to_string(dos_names);
     const size_t all_names = dos_names.size();
-    const DWORD files_count = dos_names.size();
+    const DWORD files_count = static_cast<DWORD>(dos_names.size());
 
     LPCWSTR* names = new LPCWSTR[files_count];
     DWORD i = 0;

@@ -56,12 +56,19 @@ set (rsrc
 add_subdirectory ( ${PARAMKIT_DIR} )
 
 # libs
-if (NOT PESIEVE_AS_DLL)
-	set ( PESIEVE_AS_STATIC_LIB ON CACHE BOOL "Enable building PE-sieve as a static library" FORCE)
+set(MU_PESIEVE_LINK_MODE "STATIC" CACHE STRING "How MalUnpack should build and link PE-sieve")
+set_property(CACHE MU_PESIEVE_LINK_MODE PROPERTY STRINGS STATIC DLL)
+
+if(NOT MU_PESIEVE_LINK_MODE STREQUAL "STATIC" AND NOT MU_PESIEVE_LINK_MODE STREQUAL "DLL")
+	message(FATAL_ERROR
+	"Invalid MU_PESIEVE_LINK_MODE '${MU_PESIEVE_LINK_MODE}'. Choose: STATIC DLL"
+	)
 endif()
 
-if (NOT PESIEVE_AS_STATIC_LIB)
-	set ( PESIEVE_AS_DLL ON CACHE BOOL "Enable building PE-sieve as a DLL" FORCE)
+if(MU_PESIEVE_LINK_MODE STREQUAL "STATIC")
+	set(PESIEVE_BUILD_MODE "STATIC" CACHE STRING "Build mode for PE-sieve" FORCE)
+elseif(MU_PESIEVE_LINK_MODE STREQUAL "DLL")
+	set(PESIEVE_BUILD_MODE "DLL" CACHE STRING "Build mode for PE-sieve" FORCE)
 endif()
 
 add_subdirectory (pe-sieve)
@@ -75,7 +82,6 @@ set (used_libs
 	rstrtmgr
 )
 
-LINK_DIRECTORIES ( ${PESIEVE_LIB} )
 add_executable ( ${PROJECT_NAME} ${hdrs} ${srcs} ${rsrc} main.cpp )
 target_link_libraries ( ${PROJECT_NAME} ${M_PESIEVE} ${M_PARAMKIT} ${used_libs})
 
